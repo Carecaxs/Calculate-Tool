@@ -1,0 +1,18 @@
+<div class="centrar ">
+    <div #table class=""></div>
+</div>
+
+<div class="botones">
+    <!-- <button class="btn btn-danger" (click)="addfila()">Add row</button> -->
+    <!-- <input type="number" [(ngModel)]="numeroDeFilas" placeholder="Número de filas" class="form-control" />
+    <button class="btn btn-danger" (click)="updateRowCount(numeroDeFilas)">Actualizar filas</button> -->
+
+    <div class="d-flex align-items-center col-6">
+        <label for="rowCount" class="me-2">Cantidad de Filas:</label>
+        <input type="number" [(ngModel)]="numeroDeFilas" class="form-control form-control-sm col-auto" min="1" (keydown.enter)="updateRowCount(numeroDeFilas)"/>
+    </div>
+
+
+    <button (click)="addColumn()">Add column</button>
+    <button class="btn btn-primary" (click)="eliminarColumn()">Delete column</button>
+</div>

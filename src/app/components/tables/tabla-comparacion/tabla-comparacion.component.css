@@ -1,0 +1,18 @@
+
+.tabulator{
+    width: 500px;
+    height: 300px;
+    
+}
+
+.centrar{
+    display: flex;
+    justify-content: center;
+    text-align: center;
+}
+
+.botones{
+    display: flex;
+    justify-content: center;
+    text-align: center;
+}
