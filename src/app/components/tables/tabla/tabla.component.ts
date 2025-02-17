@@ -4,7 +4,8 @@ import { SpreadsheetModule } from 'tabulator-tables';
 import { TablaPorcetajesService } from '../../../services/tabla-porcetajes.service';
 import { FormsModule } from '@angular/forms'; // 🔹 Importar FormsModule
 import { row } from 'mathjs';
-
+import { ButtonComponent } from '../../button/button.component'; // Importamos el componente hijo de botones
+import { TablaServiceService } from '../../../services/tabla-service.service';
 
 @Component({
   selector: 'app-tabla',
@@ -13,16 +14,19 @@ import { row } from 'mathjs';
   templateUrl: './tabla.component.html',
   styleUrl: './tabla.component.css'
 })
+
+
 export class TablaComponent implements AfterViewInit {
-  @ViewChild('table') tableElement!: ElementRef; // Decorador que obtiene la referencia de un elemento del DOM
+  @ViewChild('table') tableElement!: ElementRef; // Referencia al elemento HTML donde se insertará la tabla
   numeroDeFilas: number = 0;  // Propiedad para el número de filas
   table!: Tabulator; //se inicializara antes de ser utilizada(!:)
 
-  constructor(private tablaPorcentajeService: TablaPorcetajesService) { }
+  constructor(private tablaPorcentajeService: TablaPorcetajesService,
+              private tablaService: TablaServiceService) { } // Inyectamos el servicio en el constructor
 
   ngAfterViewInit(): void {
 
-    Tabulator.registerModule([SpreadsheetModule]);
+    Tabulator.registerModule([SpreadsheetModule]);//Permite activar características avanzadas de hojas de cálculo.
 
 
 
@@ -81,91 +85,32 @@ export class TablaComponent implements AfterViewInit {
 
     });
 
+    this.tablaService.setTableInstance(this.table); // Guardamos la tabla en el servicio
+
+
+ 
 
     // Escuchar cuando los datos cambian (incluye pegado desde Excel)
     this.table.on('dataChanged', () => {
       const tableData = this.table.getData();
-      this.tablaPorcentajeService.setData(tableData);
+      this.tablaPorcentajeService.setData(tableData);  //Guardamos la tabla en el servicio tabla-porcentajes
+      this.tablaService.setTableInstance(this.table); // Guardamos la tabla en el servicio tabla-service
+
     });//fin
 
     // Registrar el evento `cellEdited` que escucha cuando una celda se modifica
     this.table.on('cellEdited', () => {
       // Actualiza automáticamente los datos en el servicio
       const tableData = this.table.getData();
-      this.tablaPorcentajeService.setData(tableData);
+      this.tablaPorcentajeService.setData(tableData);  //Guardamos la tabla en el servicio tabla-porcentajes
+      this.tablaService.setTableInstance(this.table); // Guardamos la tabla en el servicio tabla-service para tener la referencia de esta y poder manipularla
 
       this.table.redraw(true); // Redibuja la tabla
 
-      //prueba para ver datos
-      console.log(this.table.getData());//obtiene el array
-      console.log(tableData.find(fila => fila.id === "Base"));//busca la coincidencia
-      console.log(tableData.filter(fila => fila.id != "Base"));//cumple la condicion
-      //fin prueba
     });//fin
 
 
   }
-
-
-  addfila() {
-    const rowCount = this.table.getDataCount(); // Cuenta el número actual de filas
-
-    const newRow = { id: rowCount }; // Genera un nuevo ID basado en el número de filas
-    console.log(newRow);
-
-    const jaja = { id: 12 };
-    console.log(jaja);
-    this.table.addRow(newRow); // Agrega la fila a la tabla principal
-
-    // Sincroniza las filas con la tabla de comparación
-    const tableData = this.table.getData();
-    this.tablaPorcentajeService.setData(tableData); // Envia los datos actualizados al servicio
-  }
-
-
-  updateRowCount(newRowCount: number) {
-    const currentRows = this.table.getDataCount(); // Obtiene la cantidad actual de filas
-    newRowCount += 1;// se le suma uno a la cantidad que el usuario ingresa ya que el programa no toma en cuenta la primer fila ya que esta destinada a base
-    let newRow; //almacena la referencia 
-    console.log(newRowCount);
-    console.log(currentRows);
-
-    if (currentRows < newRowCount) {
-
-      // Agregar filas hasta alcanzar newRowCount
-      for (let i = currentRows; i < newRowCount; i++) {
-
-        newRow = { id: i };
-        this.table.addRow(newRow);// Crea la nueva fila con un ID único     
-      }
-
-
-
-    } else if (currentRows > newRowCount) {
-
-
-      let rows = this.table.getRows();//se obtiene una referencia de las filas de la tabla
-
-      //se toma las filas que estan adelante del numero que ingreas el usuario
-      //ejemplo se ingresa 3, se toma de la 4 en adelante
-      let rowsToDelete = rows.slice(newRowCount);
-
-
-      rowsToDelete.forEach(row => {
-        row.delete();  // Elimina la fila
-      });
-
-      console.log(this.table.getRows());
-
-    }
-
-    // Sincronizar con la tabla de comparación
-    const tableData = this.table.getData();
-    this.tablaPorcentajeService.setData(tableData);
-  }
-
-
-
 
 
 
@@ -203,6 +148,11 @@ export class TablaComponent implements AfterViewInit {
       resizable: false
     }));
     this.tablaPorcentajeService.setColumns(updatedColumns);
+
+    // this.table.getColumns().map(column=>{
+    //   console.log(column.getField());
+    //   console.log(column.getDefinition().title);
+    // });
   }//fin metodo add
 
 
@@ -228,6 +178,7 @@ export class TablaComponent implements AfterViewInit {
     }
 
   }//fin metodo add
+
 
 
 

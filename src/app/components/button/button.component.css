@@ -1,0 +1,22 @@
+body {
+    text-align: center;
+    padding: 20px;
+}
+
+.comparacion-box {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 10px;
+    margin-top: 10px;
+}
+
+.btn-dark, .btn-light {
+    width: 40px;
+    height: 40px;
+    padding: 0;
+}
+
+.input-botones{
+    width: 30%;
+}

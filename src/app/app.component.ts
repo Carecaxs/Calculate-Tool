@@ -3,11 +3,12 @@ import { RouterOutlet } from '@angular/router';
 import { TablaComponent } from './components/tables/tabla/tabla.component';
 import { TablaComparacionComponent } from './components/tables/tabla-comparacion/tabla-comparacion.component';
 import { ComparisonControlsComponent } from "./components/controls/comparison-controls/comparison-controls.component";
-import { routes } from './app.routes';  // Importa las rutas
+import { routes } from './app.routes';
+import { ButtonComponent } from "./components/button/button.component";  // Importa las rutas
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [RouterOutlet, TablaComponent, TablaComparacionComponent, ComparisonControlsComponent],
+  imports: [RouterOutlet, TablaComponent, TablaComparacionComponent, ButtonComponent],
   templateUrl: './app.component.html',
   styleUrl: './app.component.css'
 })
