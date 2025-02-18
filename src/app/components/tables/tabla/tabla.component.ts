@@ -55,7 +55,7 @@ export class TablaComponent implements AfterViewInit {
         { title: 'B', field: 'b', headerSort: false, editor: "number", resizable: false },
 
       ],
-      spreadsheet: true,
+      //spreadsheet: true,
 
       layout: 'fitDataFill',
 
@@ -85,8 +85,12 @@ export class TablaComponent implements AfterViewInit {
 
     });
 
-    this.tablaService.setTableInstance(this.table); // Guardamos la tabla en el servicio
 
+    // Guardamos la tabla en el servicio despues de que se contruya completamente la tabla
+    this.table.on('tableBuilt', () => {
+      this.tablaService.setTableInstance(this.table);
+      this.tablaService.setTablaLista(true); // Notificamos que la tabla está lista
+    });
 
  
 

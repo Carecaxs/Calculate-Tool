@@ -1,80 +1,78 @@
-import { Component, EventEmitter, Output } from '@angular/core';
+import { Component } from '@angular/core';
 import { FormsModule } from '@angular/forms'; // 🔹 Importar FormsModule
 import { CommonModule } from '@angular/common';
-import { Subscription } from 'rxjs';  // Importamos Subscription
 
 import { TablaServiceService } from '../../services/tabla-service.service'; // 🔹 Importar FormsModule
 
 @Component({
   selector: 'app-button',
   standalone: true,
-  imports: [FormsModule, CommonModule],//necesario para usar la sincronizacion entre inputs y variables del componente
+  imports: [FormsModule, CommonModule], //necesario para usar la sincronizacion entre inputs y variables del componente
   templateUrl: './button.component.html',
-  styleUrl: './button.component.css'
+  styleUrl: './button.component.css',
 })
 export class ButtonComponent {
+  numeroDeFilas: number = 10; //esta variable se sincroniza con el input de cantidad de filas
+  numeroDeColumnas: number = 2; // esta variable se sincroniza con el input de cantidad de columnas
+  diferenciaSeleccionada: number = 95; // esta variable se sincroniza con el input de diferencia significativa
 
-  numeroDeFilas: number = 0;//esta variable se sincroniza con el input de cantidad de filas
-  numeroDeColumnas: number = 0; // esta variable se sincroniza con el input de cantidad de columnas
   numeroDeComparaciones: number = 1; // esta variable se sincroniza con el input de cantidad de comparaciones
-  diferenciaSeleccionada: number=95;// esta variable se sincroniza con el input de diferencia significativa
-  firstColumnSelected : string="a"; // esta variable se sincroniza con el input de la primera columna seleccionada
-  secondColumnSelected : string="b";// esta variable se sincroniza con el input de la segunda columna seleccionada
-  currentColumns: any[]=[];
 
+  //este arreglo se enlaza con los select del html, se crea un arreglo del tamano de la cantidad de comparaciones y cada index va tener dos variables para guardar
+  // las comparaciones
+  comparaciones = Array.from({ length: this.numeroDeComparaciones }, () => ({
+    firstColumnSelected: '',
+    secondColumnSelected: '',
+  }));
+  currentColumns: any[] = [];
 
-
-  constructor(private tablaService: TablaServiceService) { } // Inyectamos el servicio en el constructor
-
- 
+  constructor(private tablaService: TablaServiceService) {} // Inyectamos el servicio en el constructor
 
   ngAfterViewInit() {
-    setTimeout(() => {
-      // esperar 2 segundos para cargar las columnas disponibles
-      this.cargarColumnasActuales();
-    }, 2000); // 2000 milisegundos = 2 segundos
+    this.tablaService.tablaLista$.subscribe((estado) => {
+      if (estado) {
+        this.cargarColumnasActuales();
+      }
+    });
   }
-  
 
-
-
-  cargarColumnasActuales(){
+  cargarColumnasActuales() {
     //alamacenar las columnas de la tabla, usamos slice para saltarnos la primera columna que va ser "letras"
-    this.currentColumns=this.tablaService.getColumnsData().slice(1).map(column => ({
-      field: column.getField(),
-      title: column.getDefinition().title
-    }));
-
-
+    this.currentColumns = this.tablaService
+      .getColumnsData()
+      .slice(1)
+      .map((column) => ({
+        field: column.getField(),
+        title: column.getDefinition().title,
+      }));
   }
-
 
   actualizarFilas(numeroDeFilas: number) {
-    this.tablaService.updateRowCount(numeroDeFilas); 
- 
-
+    this.tablaService.updateRowCount(numeroDeFilas);
   }
 
-  modificarComparaciones() {
-  
+  actualizarColumnas(numeroDeColumnas: number) {
+    this.tablaService.updateColumnCount(numeroDeColumnas + 1);
   }
 
-  limpiarDatos() {
+  modificarComparaciones() {}
 
+  limpiarDatos() {}
+
+  // Función para manejar el cambio de cantidad de comparaciones
+  onComparacionesChange() {
+    //modificar size del arreglo comparaciones
+    this.comparaciones = Array.from(
+      { length: this.numeroDeComparaciones },
+      () => ({
+        firstColumnSelected: '',
+        secondColumnSelected: '',
+      })
+    );
   }
 
-    // Función para manejar el cambio de cantidad de comparaciones
-    onComparacionesChange() {
- 
-
-    }
-
-
-    //funcion para manejar cambio de diferencia significativa
-    onDiferenciaChange() {
-
-      console.log(this.diferenciaSeleccionada);
-  
-    }
-
+  //funcion para manejar cambio de diferencia significativa
+  onDiferenciaChange() {
+    console.log(this.diferenciaSeleccionada);
+  }
 }
