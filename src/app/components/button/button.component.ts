@@ -3,6 +3,7 @@ import { FormsModule } from '@angular/forms'; // 🔹 Importar FormsModule
 import { CommonModule } from '@angular/common';
 
 import { TablaServiceService } from '../../services/tabla-service.service'; // 🔹 Importar FormsModule
+import { TablaPorcetajesService } from '../../services/tabla-porcetajes.service';
 
 @Component({
   selector: 'app-button',
@@ -23,10 +24,14 @@ export class ButtonComponent {
   comparaciones = Array.from({ length: this.numeroDeComparaciones }, () => ({
     firstColumnSelected: '',
     secondColumnSelected: '',
+    colorSeleccionado: '',
   }));
   currentColumns: any[] = [];
 
-  constructor(private tablaService: TablaServiceService) {} // Inyectamos el servicio en el constructor
+  constructor(
+    private tablaService: TablaServiceService,
+    private tablaPorcentajeService: TablaPorcetajesService
+  ) {} // Inyectamos el servicio en el constructor
 
   ngAfterViewInit() {
     this.tablaService.tablaLista$.subscribe((estado) => {
@@ -47,17 +52,22 @@ export class ButtonComponent {
       }));
   }
 
+  //metodo para actualizar la cantidad de filas, recibe el nuevo numero de filas, tiene que ser mayor a 1
   actualizarFilas(numeroDeFilas: number) {
-    this.tablaService.updateRowCount(numeroDeFilas);
+    if (numeroDeFilas > 1) {
+      this.tablaService.updateRowCount(numeroDeFilas);
+    }
   }
 
+  //metodo para actualizar la cantidad de columnas, recibe el nuevo numero de columnas, tiene que ser mayor a 1
   actualizarColumnas(numeroDeColumnas: number) {
-    this.tablaService.updateColumnCount(numeroDeColumnas + 1);
+    if (numeroDeColumnas >= 2) {
+      this.tablaService.updateColumnCount(numeroDeColumnas + 1);
+      this.cargarColumnasActuales();
+    }
   }
 
   modificarComparaciones() {}
-
-  limpiarDatos() {}
 
   // Función para manejar el cambio de cantidad de comparaciones
   onComparacionesChange() {
@@ -67,12 +77,49 @@ export class ButtonComponent {
       () => ({
         firstColumnSelected: '',
         secondColumnSelected: '',
+        colorSeleccionado: '#000000',
       })
     );
   }
 
   //funcion para manejar cambio de diferencia significativa
   onDiferenciaChange() {
-    console.log(this.diferenciaSeleccionada);
+    this.tablaPorcentajeService.setDiferenciaSifnificativa(
+      this.diferenciaSeleccionada
+    );
+  }
+
+  //funcion que limpia los datos de la tabla
+  limpiarDatos() {
+    this.tablaService.limpiarDatosTabla();
+  }
+
+  onComparacionesDifSig() {
+    //aplicar los colores seleccionado a las columnas de las tablas
+    this.tablaService.applyColorsToColumns();
+  }
+
+  //ejecuta el calculo con las comparaciones contenidas
+  ejecutarCalculo() {
+    // Filtrar solo las comparaciones completas (cuando ambas columnas están seleccionadas)
+    const comparacionesValidas = this.comparaciones
+      .filter((c) => c.firstColumnSelected && c.secondColumnSelected)
+      .map((c) => ({
+        col1: c.firstColumnSelected,
+        col2: c.secondColumnSelected,
+        color: c.colorSeleccionado,
+      }));
+    console.log(comparacionesValidas);
+
+    //se envia los datos de la tabla original y los elementos de comparacion
+    //se instancia la tabla original, se  recuperan los datos y se envien como parametro
+    const data = this.tablaService.getTableInstance();
+    this.tablaPorcentajeService.setComparaciones(
+      data.getData(),
+      comparacionesValidas
+    );
+
+    //aplicar los colores seleccionado a las columnas de las tablas
+    this.tablaService.applyColorsToColumns();
   }
 }

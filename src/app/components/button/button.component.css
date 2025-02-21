@@ -33,7 +33,38 @@ body {
   border-color: #b3e6b3; /* Verde muy suave */
 }
 
-/* Cambiar el color de fondo de las opciones cuando se pasa el cursor */
-select.form-control option:hover {
-  background-color: #b3e6b3; /* Verde claro */
+.custom-select {
+  background-color: #32cd32; /* Verde más vistoso */
+  color: white; /* Texto blanco */
+  cursor: pointer; /* Cursor tipo puntero cuando el usuario pase por encima */
 }
+
+select {
+  cursor: pointer;
+}
+
+/* /////////////////////////////////////////////////////////////////////////////////////////// */
+
+/* estilos para acomodar el icono dentro de los input a la derecha */
+.contenedor-icono {
+  position: relative;
+}
+
+.contenedor-icono select {
+  width: 100%;
+  padding-right: 30px; /* Deja espacio para el icono */
+  appearance: none; /* Elimina el estilo predeterminado del navegador */
+  -webkit-appearance: none; /* Para navegadores Webkit */
+  -moz-appearance: none; /* Para Firefox */
+}
+
+.icon {
+  position: absolute;
+  top: 50%;
+  right: 10px;
+  transform: translateY(-50%);
+  pointer-events: none; /* Evita que el icono interfiera con la selección */
+  color: white;
+}
+/* /////////////////////////////////////////////////////////////////////////////////////////// */
+

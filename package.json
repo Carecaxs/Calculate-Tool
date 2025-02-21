@@ -19,6 +19,7 @@
     "@angular/platform-browser-dynamic": "^18.2.0",
     "@angular/router": "^18.2.0",
     "@handsontable/angular": "^14.6.1",
+    "@ng-select/ng-select": "^13.9.1",
     "ag-grid-angular": "^32.3.3",
     "ag-grid-community": "^32.3.3",
     "bootstrap": "^5.3.3",

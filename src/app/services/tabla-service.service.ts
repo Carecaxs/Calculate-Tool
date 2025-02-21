@@ -8,6 +8,8 @@ import { BehaviorSubject } from 'rxjs';
 })
 export class TablaServiceService {
   private table!: Tabulator; // Referencia a la tabla Tabulator
+  private tableComparacion!: Tabulator; // Referencia a la tabla comparacion Tabulator
+
   private tablaListaSubject = new BehaviorSubject<boolean>(false); // Estado inicial: tabla no lista
   tablaLista$ = this.tablaListaSubject.asObservable(); // Observable para escuchar cambios
 
@@ -23,6 +25,11 @@ export class TablaServiceService {
     return this.table;
   }
 
+  // Método para establecer la instancia de la tabla comparacion
+  setTableComparacionInstance(table: Tabulator) {
+    this.tableComparacion = table;
+  }
+
   //metodo para retornar las columnas de la tabla
   getColumnsData() {
     return this.table.getColumns();
@@ -31,6 +38,33 @@ export class TablaServiceService {
   // Notifica cuando la tabla está lista
   setTablaLista(estado: boolean) {
     this.tablaListaSubject.next(estado);
+  }
+
+  // Método para aplicar colores a las columnas desde el servicio
+  applyColorsToColumns(): void {
+    //desde la instancia de la tabla original modifica las columnas seleccionadas de comparacion y se le aplica el color elegido
+    // this.table.getRows().forEach((row) => {
+    //   row.getCells().forEach((cell) => {
+    //     const columnName = cell.getColumn().getField();
+    //     const color =
+    //       this.tablaPorcentajeService.getColorForComparation(columnName); // Usamos el método para obtener el color
+    //     if (color) {
+    //       cell.getElement().style.backgroundColor = color;
+    //     }
+    //   });
+    // });
+
+    //se realiza el mismo proceso pero para la tabla que refleja los resultados
+    this.tableComparacion.getRows().forEach((row) => {
+      row.getCells().forEach((cell) => {
+        const columnName = cell.getColumn().getField();
+        const color =
+          this.tablaPorcentajeService.getColorForComparation(columnName); // Usamos el método para obtener el color
+        if (color) {
+          cell.getElement().style.backgroundColor = color;
+        }
+      });
+    });
   }
 
   // Método para actualizar la cantidad de filas en la tabla
@@ -53,7 +87,7 @@ export class TablaServiceService {
 
     //  Sincronizar con la tabla de comparación
     const tableData = this.table.getData();
-    this.tablaPorcentajeService.setData(tableData); // Usar el servicio inyectado
+    this.tablaPorcentajeService.setDataWithoutCalculation(tableData); // Usar el servicio inyectado
   }
 
   //Metodo para agregar columnas a la tabla
@@ -108,5 +142,27 @@ export class TablaServiceService {
       index = Math.floor(index / 26) - 1;
     }
     return title;
+  }
+
+  limpiarDatosTabla() {
+    // Obtener los datos actuales de la tabla
+    const currentData = this.table.getData();
+
+    // Limpiar los datos pero mantener el valor del campo 1 (id)
+    const cleanedData = currentData.map((row) => {
+      const cleanedRow = { ...row }; // Copiar la fila
+      // Recorremos las columnas y limpiamos todos los valores excepto el campo "id"
+      Object.keys(cleanedRow).forEach((key) => {
+        if (key !== 'id') {
+          cleanedRow[key] = ''; // Limpiamos el valor, dejando el campo 'id' intacto
+        }
+      });
+      return cleanedRow; // Devolvemos la fila limpiada
+    });
+
+    // Actualizamos la tabla con los datos modificados
+    this.table.setData(cleanedData);
+
+    this.tablaPorcentajeService.setDataWithoutCalculation(cleanedData); // Actualiza el servicio con los nuevos datos
   }
 }

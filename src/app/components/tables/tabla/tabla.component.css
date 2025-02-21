@@ -1,20 +1,10 @@
-
-.tabulator{
-    width: 500px;
-    height: 300px;
-    
+.tabulator {
+  width: 700px;
+  height: 400px;
 }
 
-.centrar{
-    display: flex;
-    justify-content: center;
-    text-align: center;
+.centrar {
+  display: flex;
+  justify-content: center;
+  text-align: center;
 }
-
-.botones{
-    display: flex;
-    justify-content: center;
-    text-align: center;
-}
-
-
