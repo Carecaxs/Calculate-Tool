@@ -7,24 +7,18 @@
 <!-- * * * * * * * to get started with your project! * * * * * * * -->
 <!-- * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * -->
 <!-- <app-comparison-controls></app-comparison-controls> -->
+<app-navbar></app-navbar>
+<div class="main-content">
+  <app-button></app-button>
 
-<h1 class="text-center mt-5">Porcentaje vs Porcentaje</h1>
-<app-button></app-button>
-<div class="tables mt-5">
-  <div class="col-6">
-    <app-tabla></app-tabla>
-  </div>
-  <div class="col-6">
-    <app-tabla-comparacion></app-tabla-comparacion>
+  <div class="tables mt-2">
+    <div class="col-6">
+      <app-tabla></app-tabla>
+    </div>
+    <div class="col-6">
+      <app-tabla-comparacion></app-tabla-comparacion>
+    </div>
   </div>
 </div>
-
-<!-- * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * -->
-<!-- * * * * * * * * * * * The content above * * * * * * * * * * * * -->
-<!-- * * * * * * * * * * is only a placeholder * * * * * * * * * * * -->
-<!-- * * * * * * * * * * and can be replaced.  * * * * * * * * * * * -->
-<!-- * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * -->
-<!-- * * * * * * * * * * End of Placeholder  * * * * * * * * * * * * -->
-<!-- * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * -->
 
 <router-outlet />

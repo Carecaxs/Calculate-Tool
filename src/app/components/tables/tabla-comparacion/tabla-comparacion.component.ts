@@ -67,6 +67,8 @@ export class TablaComparacionComponent implements AfterViewInit {
           this.table.setData(dataFromFirstTable);
           this.tablaService.setTableComparacionInstance(this.table);
           this.table.redraw(true);
+
+          this.tablaService.applyColorsToColumns(2);
         }
       });
     });

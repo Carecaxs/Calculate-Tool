@@ -1,5 +1,9 @@
-.tables{
-    display: flex;
-    justify-content: center;
-    gap: 50px;
+.tables {
+  display: flex;
+  justify-content: center;
+  gap: 50px;
+}
+
+.main-content {
+  margin-top: 100px; /* Reduce el espacio entre navbar y contenido */
 }

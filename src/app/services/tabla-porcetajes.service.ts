@@ -34,18 +34,25 @@ export class TablaPorcetajesService {
     this.t_teorico = ds === 95 ? 1.96 : 1.645;
   }
 
-  // Método para establecer las comparaciones seleccionadas
+  // Método para establecer las comparaciones seleccionadas, adiconal se asigna en col1 la columna menor y en col2 la mayor
+  //esto por la logica al set los colores de las columnas
   setComparaciones(
-    dataTable: any[],
     comparacionesValidas: { col1: string; col2: string; color: string }[]
   ) {
-    this.comparacionesSeleccionadas = comparacionesValidas;
+    this.comparacionesSeleccionadas = comparacionesValidas.map(
+      (comparacion) => {
+        const [colMayor, colMenor] =
+          comparacion.col1 > comparacion.col2
+            ? [comparacion.col2, comparacion.col1]
+            : [comparacion.col1, comparacion.col2];
 
-    // Se limpia la tabla de cálculos (se elimina cualquier anotación) utilizando la tabla original
-    this.dataSubject.next([...dataTable]);
-
-    // Se re-procesa la tabla usando los datos originales
-    this.setData(dataTable, comparacionesValidas);
+        return {
+          col1: colMayor,
+          col2: colMenor,
+          color: comparacion.color,
+        };
+      }
+    );
   }
 
   setDataWithoutCalculation(data: any[]) {
@@ -57,17 +64,14 @@ export class TablaPorcetajesService {
   }
 
   // Método para actualizar los datos de la tabla y procesarlos
-  setData(
-    data: any[],
-    comparaciones: { col1: string; col2: string; color: string }[]
-  ) {
+  setData(data: any[]) {
     const filteredData = [...data]; // Crea una copia de los datos originales
     const bases = data.find((fila) => fila.id === 'Base'); // Obtiene la fila base
 
     // Procesa cada fila llamando a `processRow`
     const processedData = filteredData.map((row) => {
       if (row.id === 'Base') return { ...row }; // Si es la base, se devuelve tal cual
-      return this.processRow(row, bases, comparaciones);
+      return this.processRow(row, bases, this.comparacionesSeleccionadas);
     });
 
     this.dataSubject.next(processedData); // Actualiza los datos en el observable

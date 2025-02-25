@@ -57,8 +57,6 @@ export class TablaComponent implements AfterViewInit {
           resizable: false,
         },
       ],
-      //spreadsheet: true,
-
       layout: 'fitDataFill',
       editTriggerEvent: 'dblclick',
       editorEmptyValue: undefined,
@@ -83,8 +81,6 @@ export class TablaComponent implements AfterViewInit {
 
     // Guardamos la tabla en el servicio despues de que se contruya completamente la tabla
     this.table.on('tableBuilt', () => {
-      console.log('evento tableBuilt');
-
       const tableData = this.table.getData();
       this.tablaPorcentajeService.setDataWithoutCalculation(tableData); //Guardamos la tabla en el servicio tabla-porcentajes
 
@@ -96,11 +92,12 @@ export class TablaComponent implements AfterViewInit {
     this.table.on('dataChanged', () => {
       this.table.redraw(true);
       const tableData = this.table.getData();
-      console.log('evento dataChanged');
+
       this.tablaPorcentajeService.setDataWithoutCalculation(tableData); //Guardamos la tabla en el servicio tabla-porcentajes
       this.tablaService.setTableInstance(this.table); // Guardamos la tabla en el servicio tabla-service para tener la referencia de esta y poder manipularla
 
-      //this.applyColorsToColumns();
+      // Reaplicar los colores después de redibujar la tabla
+      this.tablaService.applyColorsToColumns(1);
     }); //fin
 
     // Registrar el evento `cellEdited` que escucha cuando una celda se modifica
@@ -108,23 +105,12 @@ export class TablaComponent implements AfterViewInit {
       this.table.redraw(true);
       // Actualiza automáticamente los datos en el servicio
       const tableData = this.table.getData();
-      console.log('evento cellEdited');
+
       this.tablaPorcentajeService.setDataWithoutCalculation(tableData); //Guardamos la tabla en el servicio tabla-porcentajes
       this.tablaService.setTableInstance(this.table); // Guardamos la tabla en el servicio tabla-service para tener la referencia de esta y poder manipularla
+
+      // Reaplicar los colores después de redibujar la tabla
+      this.tablaService.applyColorsToColumns(1);
     }); //fin
   }
-
-  // private applyColorsToColumns(): void {
-  //   this.table.getRows().forEach((row) => {
-  //     // Para cada fila, actualizamos el color de las celdas según el servicio
-  //     row.getCells().forEach((cell) => {
-  //       const columnName = cell.getColumn().getField();
-  //       const color = this.tablaPorcentajeService.getColorForColumn(columnName);
-  //       // Actualiza el color de la celda
-  //       if (color) {
-  //         cell.getElement().style.backgroundColor = color;
-  //       }
-  //     });
-  //   });
-  // }
 }

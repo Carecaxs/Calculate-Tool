@@ -18,6 +18,7 @@ export class TablaServiceService {
   // Método para establecer la instancia de la tabla
   setTableInstance(table: Tabulator) {
     this.table = table;
+    this.restablecerColores();
   }
 
   // Método para obtener la instancia de la tabla
@@ -40,19 +41,24 @@ export class TablaServiceService {
     this.tablaListaSubject.next(estado);
   }
 
-  // Método para aplicar colores a las columnas desde el servicio
-  applyColorsToColumns(): void {
-    //desde la instancia de la tabla original modifica las columnas seleccionadas de comparacion y se le aplica el color elegido
-    // this.table.getRows().forEach((row) => {
-    //   row.getCells().forEach((cell) => {
-    //     const columnName = cell.getColumn().getField();
-    //     const color =
-    //       this.tablaPorcentajeService.getColorForComparation(columnName); // Usamos el método para obtener el color
-    //     if (color) {
-    //       cell.getElement().style.backgroundColor = color;
-    //     }
-    //   });
-    // });
+  // Método para aplicar colores a las columnas desde el servicio, recibe como parametro un indicador, 1 si quiere que se refleje el color solo en la tabla rincipal
+  // recibe 2 si quiere que se refleje en las dos tablas
+  applyColorsToColumns(indicador: number): void {
+    if (indicador == 1) {
+      //se aplica colores en la tabla principal
+      this.table.getRows().forEach((row) => {
+        row.getCells().forEach((cell) => {
+          const columnName = cell.getColumn().getField();
+          const color =
+            this.tablaPorcentajeService.getColorForComparation(columnName); // Usamos el método para obtener el color
+          if (color) {
+            cell.getElement().style.backgroundColor = color;
+          }
+        });
+      });
+
+      return;
+    }
 
     //se realiza el mismo proceso pero para la tabla que refleja los resultados
     this.tableComparacion.getRows().forEach((row) => {
@@ -93,17 +99,15 @@ export class TablaServiceService {
   //Metodo para agregar columnas a la tabla
   updateColumnCount(newColumnCount: number) {
     const currentColumnCount = this.table.getColumnDefinitions().length; // Número actual de columnas
+    let columns = this.table.getColumns(); // Obtiene todas las columnas
 
     // Si el número de columnas a agregar es mayor que el número actual
     if (newColumnCount > currentColumnCount) {
-      // Agregar las columnas adicionales
       for (let i = currentColumnCount; i < newColumnCount; i++) {
         const newTitle = this.getColumnTitle(i - 1); // Generar título automáticamente
         const newField = newTitle.toLowerCase(); // Convertir a minúscula para el campo
 
-        console.log(newField);
-
-        // Agregar la nueva columna
+        // Agregar la nueva columna sin eliminar los datos existentes
         this.table.addColumn({
           title: newTitle,
           field: newField,
@@ -111,14 +115,16 @@ export class TablaServiceService {
           editor: 'number',
           resizable: false,
         });
+
+        // Agregar valores vacíos a la nueva columna para todas las filas
+        this.table.getRows().forEach((row) => {
+          row.update({ [newField]: '' }); // Inicializa sin borrar datos de otras columnas
+        });
       }
     }
     // Si el número de columnas a agregar es menor que el número actual
     else if (newColumnCount < currentColumnCount) {
-      // Si hay más columnas de las necesarias, eliminar las sobrantes
-      let columns = this.table.getColumns(); // Obtiene todas las columnas
       let columnsToDelete = columns.slice(newColumnCount); // Toma las columnas que exceden la cantidad deseada
-
       columnsToDelete.forEach((column) => column.delete()); // Elimina cada columna sobrante
     }
 
@@ -131,8 +137,9 @@ export class TablaServiceService {
         headerSort: false,
         resizable: false,
       }));
+
     this.tablaPorcentajeService.setColumns(updatedColumns);
-  } //fin metodo add
+  }
 
   // Método para generar el título de la columna basado en el abecedario
   getColumnTitle(index: number): string {
@@ -163,6 +170,17 @@ export class TablaServiceService {
     // Actualizamos la tabla con los datos modificados
     this.table.setData(cleanedData);
 
+    this.restablecerColores();
+
     this.tablaPorcentajeService.setDataWithoutCalculation(cleanedData); // Actualiza el servicio con los nuevos datos
+  }
+
+  restablecerColores() {
+    // Restablecer los colores de todas las celdas
+    this.table.getRows().forEach((row) => {
+      row.getCells().forEach((cell) => {
+        cell.getElement().style.backgroundColor = ''; // Eliminar color de fondo
+      });
+    });
   }
 }

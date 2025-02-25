@@ -1,2 +1,39 @@
 /* You can add global styles to this file, and also import other style files */
 
+.tabulator .tabulator-row .tabulator-cell {
+  border: 1px solid #d0d7de; /* Color gris claro, similar a Excel */
+}
+
+/* Agregar bordes a los encabezados */
+.tabulator .tabulator-header .tabulator-col {
+  border: 1px solid #d0d7de;
+}
+
+/* Asegurar que la última columna tenga un borde derecho */
+.tabulator .tabulator-row .tabulator-cell:last-child {
+  border-right: 1px solid #d0d7de !important;
+}
+
+/* Asegurar que el encabezado también tenga borde */
+.tabulator .tabulator-header .tabulator-col:last-child {
+  border-right: 1px solid #d0d7de !important;
+}
+
+.tabulator {
+  width: 700px;
+  height: 400px;
+}
+
+.centrar {
+  display: flex;
+  justify-content: center;
+  text-align: center;
+}
+
+body {
+  display: flex;
+  flex-direction: column; /* Asegura que los elementos se apilen verticalmente */
+  align-items: center; /* Centra horizontalmente */
+  justify-content: flex-start; /* Evita que se empujen al centro */
+  min-height: 100vh;
+}
