@@ -93,42 +93,72 @@ export class TablaServiceService {
 
     //  Sincronizar con la tabla de comparación
     const tableData = this.table.getData();
-    this.tablaPorcentajeService.setDataWithoutCalculation(tableData); // Usar el servicio inyectado
+    this.tablaPorcentajeService.setData(tableData); // Usar el servicio inyectado
   }
 
   //Metodo para agregar columnas a la tabla
   updateColumnCount(newColumnCount: number) {
-    const currentColumnCount = this.table.getColumnDefinitions().length; // Número actual de columnas
-    let columns = this.table.getColumns(); // Obtiene todas las columnas
+    // 1. Obtener el número actual de columnas a partir de las definiciones existentes en la tabla.
+    const currentColumnCount = this.table.getColumnDefinitions().length;
 
-    // Si el número de columnas a agregar es mayor que el número actual
+    // 2. Bloquear el redibujado para evitar que se renderice la tabla en cada actualización individual.
+    // Esto agrupa todas las actualizaciones y mejora el rendimiento.
+    this.table.blockRedraw();
+
+    // 3. Si el nuevo número de columnas es mayor que el actual, debemos agregar columnas.
     if (newColumnCount > currentColumnCount) {
+      const newColumns: any[] = [];
+
+      // Iterar desde el número actual de columnas hasta el nuevo número deseado.
       for (let i = currentColumnCount; i < newColumnCount; i++) {
-        const newTitle = this.getColumnTitle(i - 1); // Generar título automáticamente
-        const newField = newTitle.toLowerCase(); // Convertir a minúscula para el campo
+        // Generar automáticamente el título de la columna usando un método auxiliar.
+        const newTitle = this.getColumnTitle(i - 1);
+        // Convertir el título a minúsculas para usarlo como identificador (campo) en los datos.
+        const newField = newTitle.toLowerCase();
 
-        // Agregar la nueva columna sin eliminar los datos existentes
-        this.table.addColumn({
-          title: newTitle,
-          field: newField,
-          headerSort: false,
-          editor: 'number',
-          resizable: false,
-        });
-
-        // Agregar valores vacíos a la nueva columna para todas las filas
-        this.table.getRows().forEach((row) => {
-          row.update({ [newField]: '' }); // Inicializa sin borrar datos de otras columnas
+        // Agregar la nueva columna al arreglo de columnas nuevas con las propiedades deseadas.
+        newColumns.push({
+          title: newTitle, // Título visible de la columna.
+          field: newField, // Nombre del campo en el objeto de datos.
+          headerSort: false, // Deshabilitar la ordenación al hacer clic en el encabezado.
+          editor: 'number', // Asigna un editor de tipo "number" para esta columna.
+          resizable: false, // Evitar que el usuario modifique el ancho de la columna.
         });
       }
+
+      // 3.1. Obtener las columnas actuales (definiciones) de la tabla.
+      const currentColumns = this.table.getColumnDefinitions();
+      // 3.2. Combinar las columnas existentes con las nuevas y actualizar la tabla de una sola vez.
+      this.table.setColumns([...currentColumns, ...newColumns]);
+
+      // 3.3. Actualizar las filas para que cada una tenga los nuevos campos agregados con valor vacío.
+      const rows = this.table.getRows();
+      rows.forEach((row) => {
+        let updateData: any = {};
+        // Para cada nueva columna, agregamos una propiedad con el identificador y valor vacío.
+        for (let i = currentColumnCount; i < newColumnCount; i++) {
+          const newTitle = this.getColumnTitle(i - 1);
+          const newField = newTitle.toLowerCase();
+          updateData[newField] = ''; // Inicializamos con cadena vacía.
+        }
+        // Actualizamos la fila con todos los nuevos campos en una única operación.
+        row.update(updateData);
+      });
     }
-    // Si el número de columnas a agregar es menor que el número actual
+    // 4. Si el nuevo número de columnas es menor que el actual, se deben eliminar las columnas sobrantes.
     else if (newColumnCount < currentColumnCount) {
-      let columnsToDelete = columns.slice(newColumnCount); // Toma las columnas que exceden la cantidad deseada
-      columnsToDelete.forEach((column) => column.delete()); // Elimina cada columna sobrante
+      // Se obtiene el arreglo de columnas excedentes, a partir del índice newColumnCount hasta el final.
+      const columnsToDelete = this.table.getColumns().slice(newColumnCount);
+      // Se elimina cada columna sobrante.
+      columnsToDelete.forEach((column) => column.delete());
     }
 
-    // Actualizar columnas en el servicio después de agregar o eliminar
+    // 5. Forzar una única actualización final de la tabla.
+    // Esto "desbloquea" el redibujado y refresca la tabla en una sola operación.
+    this.table.redraw(true);
+
+    // 6. Actualizar la definición de columnas en el servicio asociado.
+    // Esto es útil para que otros componentes o servicios conozcan el nuevo esquema de columnas.
     const updatedColumns = this.table
       .getColumnDefinitions()
       .map((col: any) => ({
@@ -137,8 +167,9 @@ export class TablaServiceService {
         headerSort: false,
         resizable: false,
       }));
-
     this.tablaPorcentajeService.setColumns(updatedColumns);
+
+    this.applyColorsToColumns(1);
   }
 
   // Método para generar el título de la columna basado en el abecedario
@@ -152,31 +183,38 @@ export class TablaServiceService {
   }
 
   limpiarDatosTabla() {
-    // Obtener los datos actuales de la tabla
-    const currentData = this.table.getData();
+    // Obtén todas las filas actuales de la tabla
+    const rows = this.table.getRows();
 
-    // Limpiar los datos pero mantener el valor del campo 1 (id)
-    const cleanedData = currentData.map((row) => {
-      const cleanedRow = { ...row }; // Copiar la fila
-      // Recorremos las columnas y limpiamos todos los valores excepto el campo "id"
-      Object.keys(cleanedRow).forEach((key) => {
+    // Bloquear el redibujado para evitar múltiples reflows mientras actualizamos las filas
+    this.table.blockRedraw();
+
+    // Para cada fila, actualiza sus celdas (excepto "id") a undefined
+    const cleanedData = rows.map((row) => {
+      const data = row.getData();
+      // Creamos un nuevo objeto con el id intacto
+      const newData: any = { id: data['id'] };
+      Object.keys(data).forEach((key) => {
         if (key !== 'id') {
-          cleanedRow[key] = ''; // Limpiamos el valor, dejando el campo 'id' intacto
+          newData[key] = undefined;
         }
       });
-      return cleanedRow; // Devolvemos la fila limpiada
+      // Actualizamos la fila con el nuevo objeto
+      row.update(newData);
+      return newData;
     });
 
-    // Actualizamos la tabla con los datos modificados
-    this.table.setData(cleanedData);
+    this.table.redraw(true);
 
+    // Reaplicar colores y resetear comparaciones
     this.restablecerColores();
-
-    this.tablaPorcentajeService.setDataWithoutCalculation(cleanedData); // Actualiza el servicio con los nuevos datos
+    this.tablaPorcentajeService.resetComparaciones();
+    this.tablaPorcentajeService.setData(cleanedData);
   }
 
   restablecerColores() {
-    // Restablecer los colores de todas las celdas
+    // Restablecer los colores de todas las celdas de la tabla
+
     this.table.getRows().forEach((row) => {
       row.getCells().forEach((cell) => {
         cell.getElement().style.backgroundColor = ''; // Eliminar color de fondo

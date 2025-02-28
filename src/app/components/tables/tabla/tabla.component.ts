@@ -82,7 +82,7 @@ export class TablaComponent implements AfterViewInit {
     // Guardamos la tabla en el servicio despues de que se contruya completamente la tabla
     this.table.on('tableBuilt', () => {
       const tableData = this.table.getData();
-      this.tablaPorcentajeService.setDataWithoutCalculation(tableData); //Guardamos la tabla en el servicio tabla-porcentajes
+      this.tablaPorcentajeService.setData(tableData); //Guardamos la tabla en el servicio tabla-porcentajes
 
       this.tablaService.setTableInstance(this.table); // Guardamos la tabla en el servicio tabla-service para tener la referencia de esta y poder manipularla
       this.tablaService.setTablaLista(true); // Notificamos que la tabla está lista
@@ -93,7 +93,7 @@ export class TablaComponent implements AfterViewInit {
       this.table.redraw(true);
       const tableData = this.table.getData();
 
-      this.tablaPorcentajeService.setDataWithoutCalculation(tableData); //Guardamos la tabla en el servicio tabla-porcentajes
+      this.tablaPorcentajeService.setData(tableData); //Guardamos la tabla en el servicio tabla-porcentajes
       this.tablaService.setTableInstance(this.table); // Guardamos la tabla en el servicio tabla-service para tener la referencia de esta y poder manipularla
 
       // Reaplicar los colores después de redibujar la tabla
@@ -106,7 +106,7 @@ export class TablaComponent implements AfterViewInit {
       // Actualiza automáticamente los datos en el servicio
       const tableData = this.table.getData();
 
-      this.tablaPorcentajeService.setDataWithoutCalculation(tableData); //Guardamos la tabla en el servicio tabla-porcentajes
+      this.tablaPorcentajeService.setData(tableData); //Guardamos la tabla en el servicio tabla-porcentajes
       this.tablaService.setTableInstance(this.table); // Guardamos la tabla en el servicio tabla-service para tener la referencia de esta y poder manipularla
 
       // Reaplicar los colores después de redibujar la tabla

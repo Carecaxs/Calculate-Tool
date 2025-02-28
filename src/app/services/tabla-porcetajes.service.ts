@@ -55,7 +55,11 @@ export class TablaPorcetajesService {
     );
   }
 
-  setDataWithoutCalculation(data: any[]) {
+  resetComparaciones() {
+    this.comparacionesSeleccionadas = []; // Vaciar las comparaciones almacenadas
+  }
+
+  setData(data: any[]) {
     // Crear una copia de los datos originales
     const copiedData = [...data];
 
@@ -64,7 +68,7 @@ export class TablaPorcetajesService {
   }
 
   // Método para actualizar los datos de la tabla y procesarlos
-  setData(data: any[]) {
+  ejecutarCalculo(data: any[]) {
     const filteredData = [...data]; // Crea una copia de los datos originales
     const bases = data.find((fila) => fila.id === 'Base'); // Obtiene la fila base
 
@@ -163,7 +167,7 @@ export class TablaPorcetajesService {
       // Actualiza la celda con el valor original y, si existen, las diferencias acumuladas.
       processedRow[column] =
         dsAccumulado.length > 0
-          ? `${currentValue} (${dsAccumulado.join(' | ')})`
+          ? `${currentValue} (<strong>${dsAccumulado.join(' | ')}</strong>)`
           : `${currentValue}`;
     });
 
@@ -177,95 +181,14 @@ export class TablaPorcetajesService {
 
   // Método para obtener el color de una columna
   getColorForComparation(column: string): string {
+    // Si la columna es "id", "Base", etc., no colorear
+    if (column === 'id' || column === 'Base') {
+      return 'transparent';
+    }
+
     const comparacion = this.comparacionesSeleccionadas.find(
       (comp) => column >= comp.col1 && column <= comp.col2
     );
     return comparacion ? comparacion.color : 'transparent'; // Si no hay color, retorna 'transparent'
   }
-
-  // setData(data: any[]) {
-  //   // 'data' es un array que contiene los datos a procesar.
-
-  //   const filteredData = data; // Crea una copia del array de datos original.
-
-  //   // Busca la fila que tiene id === "Base" en los datos, que contiene las bases de comparación.
-  //   const bases = data.find((fila) => fila.id === 'Base');
-
-  //   // Se inicia el procesamiento de los datos.
-  //   const processedData = filteredData.map((row) => {
-  //     const columns = Object.keys(row); // Obtiene todas las claves de las columnas (id, y los demás campos de la tabla).
-  //     let processedRow = { ...row }; // Crea una copia de la fila actual.
-
-  //     // Si la fila es la "Base", no se procesa y se devuelve tal cual.
-  //     if (row.id === 'Base') {
-  //       return processedRow;
-  //     }
-
-  //     // Itera por cada columna de la fila.
-  //     columns.forEach((column, index) => {
-  //       // Se omite la columna "id" (y la columna 0) para el procesamiento.
-  //       if (index === 0 || column === 'id') return;
-
-  //       const currentValue = row[column]; // Obtiene el valor de la columna en la fila actual.
-
-  //       // Si el valor es indefinido, nulo o vacío, se omite este valor.
-  //       if (
-  //         currentValue === undefined ||
-  //         currentValue === null ||
-  //         currentValue === ''
-  //       ) {
-  //         return;
-  //       }
-
-  //       // Compara el valor actual con los valores de las demás columnas.
-  //       const greaterThanColumns = columns
-  //         .filter(
-  //           (compareColumn) =>
-  //             compareColumn !== column && compareColumn !== 'id'
-  //         ) // Filtra las columnas para que no se comparen con sí mismas ni con 'id'.
-  //         .filter((compareColumn) => {
-  //           const compareValue = row[compareColumn]; // Obtiene el valor de la columna a comparar.
-
-  //           // Obtiene los valores de las bases correspondientes para las columnas.
-  //           const b1 = Number(bases[column]);
-  //           const b2 = Number(bases[compareColumn]);
-
-  //           // Calcula la ponderación de las columnas.
-  //           const p1 = currentValue / 100;
-  //           const p2 = compareValue / 100;
-  //           const ponderada = (p1 * b1 + p2 * b2) / (b1 + b2);
-
-  //           // Calcula el valor de Z para la diferencia entre las dos columnas.
-  //           const z = Math.abs(
-  //             (p1 - p2) /
-  //               Math.sqrt(ponderada * (1 - ponderada) * (1 / b1 + 1 / b2))
-  //           );
-
-  //           // Se filtra la columna para que solo se devuelvan aquellas que tienen una diferencia significativa (mayor que 't_teorico') y cuyo valor sea mayor que el de la columna comparada.
-  //           return (
-  //             compareValue !== undefined && // Verifica que el valor comparado no sea indefinido.
-  //             compareValue !== null && // Verifica que el valor comparado no sea nulo.
-  //             compareValue !== '' && // Verifica que el valor comparado no sea vacío.
-  //             z > this.t_teorico && // Verifica si la diferencia Z es mayor que el valor Z crítico.
-  //             Number(currentValue) > Number(compareValue) // Verifica que el valor actual sea mayor que el valor comparado.
-  //           );
-  //         })
-  //         // Convierte los nombres de las columnas comparadas a mayúsculas y las junta con comas.
-  //         .map((compareColumn) => compareColumn.toUpperCase())
-  //         .join(', ');
-
-  //       // Si hay columnas cuyo valor es mayor que el valor de la columna actual, se agregan a la celda.
-  //       if (greaterThanColumns) {
-  //         processedRow[column] = `${currentValue} (${greaterThanColumns})`; // Se muestra el valor de la celda con las columnas que son mayores.
-  //       } else {
-  //         processedRow[column] = `${currentValue}`; // Si no hay ninguna columna mayor, solo se muestra el valor de la celda.
-  //       }
-  //     });
-
-  //     return processedRow; // Devuelve la fila procesada.
-  //   });
-
-  //   // Se actualiza el Subject con los datos procesados.
-  //   this.dataSubject.next(processedData);
-  // }
 }

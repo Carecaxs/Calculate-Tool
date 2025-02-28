@@ -4,6 +4,7 @@ import { CommonModule } from '@angular/common';
 
 import { TablaServiceService } from '../../services/tabla-service.service'; // 🔹 Importar FormsModule
 import { TablaPorcetajesService } from '../../services/tabla-porcetajes.service';
+declare var bootstrap: any;
 
 @Component({
   selector: 'app-button',
@@ -26,9 +27,21 @@ export class ButtonComponent {
   comparaciones = Array.from({ length: this.numeroDeComparaciones }, () => ({
     firstColumnSelected: '',
     secondColumnSelected: '',
-    colorSeleccionado: '#ffffff',
+    colorSeleccionado: '#9FA1F4',
   }));
   currentColumns: any[] = [];
+
+  //almacena los colores predefinidos para las comparaciones
+  coloresPredefinidos = [
+    '#9FA1F4', // Primera comparación
+    '#EFB2B2', // Segunda comparación
+    '#B2D8F0', // Tercera comparación
+    '#E3B2F0', // Cuarta comparación
+    '#B2ECF0', // Quinta comparación
+    '#EFF0B2', // Sexta comparación
+    '#B2F0C5', // Séptima comparación
+    '#FFE9D6', // Octava comparación
+  ];
 
   constructor(
     private tablaService: TablaServiceService,
@@ -54,9 +67,20 @@ export class ButtonComponent {
       }));
   }
 
+  //metodo para evitar que al seleccionar cantidad de filas el usuario ingrese un cero de primero, ya despues de lo permite por ejemplo que quiera poner 10,20,etc...
+  evitarCeroInicial(event: KeyboardEvent) {
+    if (
+      (event.key === '0' &&
+        (!this.numeroDeFilas || this.numeroDeFilas.toString().length === 0)) ||
+      event.key === '-'
+    ) {
+      event.preventDefault(); // Bloquea la tecla "0" si es el primer carácter
+    }
+  }
+
   //metodo para actualizar la cantidad de filas, recibe el nuevo numero de filas, tiene que ser mayor a 1
   actualizarFilas(numeroDeFilas: number) {
-    if (numeroDeFilas > 1) {
+    if (numeroDeFilas > 0) {
       this.tablaService.updateRowCount(numeroDeFilas);
     }
   }
@@ -73,13 +97,13 @@ export class ButtonComponent {
 
   // Función para manejar el cambio de cantidad de comparaciones
   onComparacionesChange() {
-    //modificar size del arreglo comparaciones
+    // Crear un nuevo arreglo con el tamaño actualizado
     this.comparaciones = Array.from(
       { length: this.numeroDeComparaciones },
-      () => ({
-        firstColumnSelected: '',
-        secondColumnSelected: '',
-        colorSeleccionado: '#ffffff',
+      (_, i) => ({
+        firstColumnSelected: this.comparaciones[i]?.firstColumnSelected || '',
+        secondColumnSelected: this.comparaciones[i]?.secondColumnSelected || '',
+        colorSeleccionado: this.coloresPredefinidos[i],
       })
     );
   }
@@ -94,6 +118,14 @@ export class ButtonComponent {
   //funcion que limpia los datos de la tabla
   limpiarDatos() {
     this.tablaService.limpiarDatosTabla();
+    this.comparaciones = Array.from(
+      { length: this.numeroDeComparaciones },
+      (_, i) => ({
+        firstColumnSelected: '',
+        secondColumnSelected: '',
+        colorSeleccionado: this.coloresPredefinidos[i],
+      })
+    );
   }
 
   onComparacionesDifSig() {
@@ -113,7 +145,7 @@ export class ButtonComponent {
     //se envia los datos de la tabla original y los elementos de comparacion
     //se instancia la tabla original, se  recuperan los datos y se envien como parametro
     const data = this.tablaService.getTableInstance();
-    this.tablaPorcentajeService.setData(data.getData());
+    this.tablaPorcentajeService.ejecutarCalculo(data.getData());
 
     //aplicar los colores seleccionado a las columnas de las tablas
     this.tablaService.applyColorsToColumns(2);
@@ -145,6 +177,16 @@ export class ButtonComponent {
     );
     if (currentOptionIndex === -1) {
       return false;
+    }
+
+    // Evitar que la columna se compare consigo misma
+    const currentComparison = this.comparaciones[currentComparisonIndex];
+    if (
+      currentComparison &&
+      (currentComparison.firstColumnSelected === columnField ||
+        currentComparison.secondColumnSelected === columnField)
+    ) {
+      return true; // Si la columna ya está seleccionada en este bloque, se deshabilita
     }
 
     // Recorrer las comparaciones de otros bloques

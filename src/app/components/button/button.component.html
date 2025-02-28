@@ -13,6 +13,7 @@
       [(ngModel)]="numeroDeFilas"
       class="form-control form-control-md input-botones"
       (keydown.enter)="actualizarFilas(numeroDeFilas)"
+      (keydown)="evitarCeroInicial($event)"
     />
   </div>
 

@@ -37,3 +37,10 @@ body {
   justify-content: flex-start; /* Evita que se empujen al centro */
   min-height: 100vh;
 }
+
+.tabulator .tabulator-tableholder {
+  overflow: auto !important;
+  /* Opcional: si necesitas definir un máximo de tamaño */
+  max-width: 100%;
+  max-height: 100%;
+}
