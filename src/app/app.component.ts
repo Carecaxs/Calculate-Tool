@@ -9,13 +9,7 @@ import { NavbarComponent } from './navbar/navbar.component';
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [
-    RouterOutlet,
-    TablaComponent,
-    TablaComparacionComponent,
-    ButtonComponent,
-    NavbarComponent,
-  ],
+  imports: [RouterOutlet, ButtonComponent, NavbarComponent],
   templateUrl: './app.component.html',
   styleUrl: './app.component.css',
 })

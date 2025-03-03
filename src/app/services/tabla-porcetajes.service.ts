@@ -34,6 +34,11 @@ export class TablaPorcetajesService {
     this.t_teorico = ds === 95 ? 1.96 : 1.645;
   }
 
+  //metodo para retornar las comparaciones validas actuales
+  getComparaciones() {
+    return this.comparacionesSeleccionadas;
+  }
+
   // Método para establecer las comparaciones seleccionadas, adiconal se asigna en col1 la columna menor y en col2 la mayor
   //esto por la logica al set los colores de las columnas
   setComparaciones(

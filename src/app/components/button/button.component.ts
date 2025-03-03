@@ -106,6 +106,26 @@ export class ButtonComponent {
         colorSeleccionado: this.coloresPredefinidos[i],
       })
     );
+
+    //identificar si se eliminaron comparaciones para actualizar las comparaciones validas en el servicio
+    //obtener el size de las comparaciones actualizadas y las antiguas
+    const comparacionesAhora = this.comparaciones.length;
+    const comparacionesAntes =
+      this.tablaPorcentajeService.getComparaciones().length;
+    if (comparacionesAhora < comparacionesAntes) {
+      //si se eliminaron comparaciones se actualizan las comparaciones en el servicio, se eliminan los estilos asignados a las comparaciones ya no existentes
+
+      // Filtrar solo las comparaciones completas (cuando ambas columnas están seleccionadas)
+      const comparacionesValidas = this.filtrarComparacionesValidas();
+
+      //actualizar comparaciones en el servicio
+      this.tablaPorcentajeService.setComparaciones(comparacionesValidas);
+      //actualizar los colores (eliminar los colores de las comparaciones no existentes)
+      this.tablaService.applyColorsToColumns(1);
+
+      //tambien se actualiza el calculo
+      this.ejecutarCalculo();
+    }
   }
 
   //funcion para manejar cambio de diferencia significativa
