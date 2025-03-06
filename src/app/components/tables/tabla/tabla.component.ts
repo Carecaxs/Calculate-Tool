@@ -6,8 +6,7 @@ import {
 import { SpreadsheetModule } from 'tabulator-tables';
 import { TablaPorcetajesService } from '../../../services/tabla-porcetajes.service';
 import { FormsModule } from '@angular/forms'; // 🔹 Importar FormsModule
-import { row } from 'mathjs';
-import { ButtonComponent } from '../../button/button.component'; // Importamos el componente hijo de botones
+import { ActivatedRoute, Router } from '@angular/router';
 import { TablaServiceService } from '../../../services/tabla-service.service';
 
 @Component({
@@ -21,19 +20,43 @@ export class TablaComponent implements AfterViewInit {
   @ViewChild('table') tableElement!: ElementRef; // Referencia al elemento HTML donde se insertará la tabla
   numeroDeFilas: number = 0; // Propiedad para el número de filas
   table!: Tabulator; //se inicializara antes de ser utilizada(!:)
+  mode: string = ''; //guarda en que seccion estamos: porcentajes, medias, normas
 
   constructor(
     private tablaPorcentajeService: TablaPorcetajesService,
-    private tablaService: TablaServiceService
+    private tablaService: TablaServiceService,
+    private activatedRoute: ActivatedRoute
   ) {} // Inyectamos el servicio en el constructor
 
   ngAfterViewInit(): void {
     Tabulator.registerModule([SpreadsheetModule]); //Permite activar características avanzadas de hojas de cálculo.
 
-    //Datos para inicializar las filas en la tabla
+    this.mode = this.activatedRoute.snapshot.data['mode'];
+    this.tablaService.setMode(this.mode);
+
     const initialData = [];
-    for (let i = 0; i < 11; i++) {
-      initialData.push({ id: i === 0 ? 'Base' : i }); // "Base" para la primera fila, números para las siguientes
+
+    if (this.mode == 'porcentajes') {
+      //Datos para inicializar las filas en la tabla en el modulo porcentajes
+
+      for (let i = 0; i < 11; i++) {
+        initialData.push({ id: i === 0 ? 'Base' : i }); // "Base" para la primera fila, números para las siguientes
+      }
+    } else if (this.mode == 'medias') {
+      //Datos para inicializar las filas en la tabla en el modulo medias
+
+      for (let i = 0; i < 3; i++) {
+        initialData.push({
+          id: i === 0 ? 'Base' : i === 1 ? 'Media' : 'Desviación estándar',
+        });
+      }
+    } else {
+      //Datos para inicializar las filas en la tabla en el modulo normas
+
+      //esto se deja asi pero hay que cambiarlo, aun no se ha trabajado en normas
+      for (let i = 0; i < 11; i++) {
+        initialData.push({ id: i === 0 ? 'Base' : i }); // "Base" para la primera fila, números para las siguientes
+      }
     }
 
     this.table = new Tabulator(this.tableElement.nativeElement, {

@@ -2,16 +2,16 @@ import { Component } from '@angular/core';
 import { FormsModule } from '@angular/forms'; // 🔹 Importar FormsModule
 import { CommonModule } from '@angular/common';
 
-import { TablaServiceService } from '../../services/tabla-service.service'; // 🔹 Importar FormsModule
-import { TablaPorcetajesService } from '../../services/tabla-porcetajes.service';
+import { TablaServiceService } from '../../../services/tabla-service.service'; // 🔹 Importar FormsModule
+import { TablaPorcetajesService } from '../../../services/tabla-porcetajes.service';
 declare var bootstrap: any;
 
 @Component({
   selector: 'app-button',
   standalone: true,
   imports: [FormsModule, CommonModule], //necesario para usar la sincronizacion entre inputs y variables del componente
-  templateUrl: './button.component.html',
-  styleUrl: './button.component.css',
+  templateUrl: './button-porcentajes.component.html',
+  styleUrl: './button-porcentajes.component.css',
 })
 export class ButtonComponent {
   numeroDeFilas: number = 10; //esta variable se sincroniza con el input de cantidad de filas
@@ -88,12 +88,25 @@ export class ButtonComponent {
   //metodo para actualizar la cantidad de columnas, recibe el nuevo numero de columnas, tiene que ser mayor a 1
   actualizarColumnas(numeroDeColumnas: number) {
     if (numeroDeColumnas >= 2) {
+      //  Guardar la cantidad actual de columnas ANTES de modificar nada
+      const oldColumnCount = this.currentColumns.length;
+
       this.tablaService.updateColumnCount(Number(numeroDeColumnas) + 1);
       this.cargarColumnasActuales();
+
+      //Compara la nueva cantidad con la anterior
+      const newColumnCount = this.currentColumns.length;
+      if (newColumnCount < oldColumnCount) {
+        // Se han reducido columnas, así que revisamos comparaciones desde el servicio
+        //esto para que no hayan comparaciones validas de alguna columna que ya no exista
+        this.verificarComparacionesInvalidas();
+        this.ejecutarCalculo();
+      } else {
+        //en caso de aumentar las columnas se vuelven a filtrar las comparaciones validas, esto para asegurar que el servicio tenga todas las comparaciones
+        this.onComparacionesDifSig();
+      }
     }
   }
-
-  modificarComparaciones() {}
 
   // Función para manejar el cambio de cantidad de comparaciones
   onComparacionesChange() {
@@ -158,14 +171,9 @@ export class ButtonComponent {
 
   //ejecuta el calculo con las comparaciones contenidas
   ejecutarCalculo() {
-    // // Filtrar solo las comparaciones completas (cuando ambas columnas están seleccionadas)
-    // const comparacionesValidas = this.filtrarComparacionesValidas();
-
-    // this.tablaPorcentajeService.setComparaciones(comparacionesValidas);
-    //se envia los datos de la tabla original y los elementos de comparacion
     //se instancia la tabla original, se  recuperan los datos y se envien como parametro
     const data = this.tablaService.getTableInstance();
-    this.tablaPorcentajeService.ejecutarCalculo(data.getData());
+    this.tablaPorcentajeService.ejecutarCalculoPorcentaje(data.getData());
 
     //aplicar los colores seleccionado a las columnas de las tablas
     this.tablaService.applyColorsToColumns(2);
@@ -240,5 +248,46 @@ export class ButtonComponent {
     }
 
     return false;
+  }
+
+  //este metodo va ser usado al reducir la cantidad de columnas para validar que no este una columna que ya no exista dentro de comparaciones validas
+  verificarComparacionesInvalidas() {
+    //obtenemos las comparaciones exitentes validadas desde el servicio
+    const comparaciones = this.tablaPorcentajeService.getComparaciones();
+
+    //variable a retornar
+    let hayComparacionesInvalidas = false;
+
+    // Recorremos cada comparación y vemos si col1 o col2 sigue existiendo
+    for (const comp of comparaciones) {
+      // Verifica col1
+      const col1Existe = this.currentColumns.some(
+        (col) => col.field === comp.col1
+      );
+      // Verifica col2
+      const col2Existe = this.currentColumns.some(
+        (col) => col.field === comp.col2
+      );
+
+      if (!col1Existe || !col2Existe) {
+        // Esta comparación hace referencia a columnas que ya no existen
+        hayComparacionesInvalidas = true;
+        break; // No necesitamos chequear más
+      }
+    }
+
+    if (hayComparacionesInvalidas) {
+      // conservar solo las comparaciones válidas:
+      const comparacionesValidas = comparaciones.filter((comp) => {
+        const col1Existe = this.currentColumns.some(
+          (col) => col.field === comp.col1
+        );
+        const col2Existe = this.currentColumns.some(
+          (col) => col.field === comp.col2
+        );
+        return col1Existe && col2Existe;
+      });
+      this.tablaPorcentajeService.setComparaciones(comparacionesValidas);
+    }
   }
 }

@@ -6,9 +6,11 @@ export const routes: Routes = [
   {
     path: 'porcentajes',
     component: PorcentajesComponent,
+    data: { mode: 'porcentajes' },
   },
   {
     path: 'medias',
     component: MediasComponent,
+    data: { mode: 'medias' },
   },
 ];

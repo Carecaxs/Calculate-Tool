@@ -8,10 +8,13 @@ import { BehaviorSubject } from 'rxjs';
 })
 export class TablaServiceService {
   private table!: Tabulator; // Referencia a la tabla Tabulator
-  private tableComparacion!: Tabulator; // Referencia a la tabla comparacion Tabulator
+  private tableComparacion!: Tabulator; // Referencia a la tabla comparacion porcentajes Tabulator
+  private tableResultMedias!: Tabulator; // Referencia a la tabla resultados medias Tabulator
 
   private tablaListaSubject = new BehaviorSubject<boolean>(false); // Estado inicial: tabla no lista
   tablaLista$ = this.tablaListaSubject.asObservable(); // Observable para escuchar cambios
+
+  mode: string = ''; //guarda en que seccion estamos: porcentajes, medias, normas
 
   constructor(private tablaPorcentajeService: TablaPorcetajesService) {} // Inyectar el servicio
 
@@ -31,6 +34,11 @@ export class TablaServiceService {
     this.tableComparacion = table;
   }
 
+  // Método para establecer la instancia de la tabla comparacion
+  setTableResultMediaInstance(table: Tabulator) {
+    this.tableResultMedias = table;
+  }
+
   //metodo para retornar las columnas de la tabla
   getColumnsData() {
     return this.table.getColumns();
@@ -41,8 +49,13 @@ export class TablaServiceService {
     this.tablaListaSubject.next(estado);
   }
 
+  setMode(mode: string) {
+    this.mode = mode;
+  }
+
   // Método para aplicar colores a las columnas desde el servicio, recibe como parametro un indicador, 1 si quiere que se refleje el color solo en la tabla rincipal
-  // recibe 2 si quiere que se refleje en las dos tablas
+  // recibe 2 para aplicar color a la tabla de resultado en porcentajes
+  //recibe 3 para aplicar color a la tabla de resultado en medias
   applyColorsToColumns(indicador: number): void {
     if (indicador == 1) {
       //se aplica colores en la tabla principal
@@ -60,8 +73,25 @@ export class TablaServiceService {
       return;
     }
 
+    if (indicador == 2) {
+      //se realiza el mismo proceso pero para la tabla que refleja los resultados
+      this.tableComparacion.getRows().forEach((row) => {
+        row.getCells().forEach((cell) => {
+          const columnName = cell.getColumn().getField();
+          const color =
+            this.tablaPorcentajeService.getColorForComparation(columnName); // Usamos el método para obtener el color
+          if (color) {
+            cell.getElement().style.backgroundColor = color;
+          }
+        });
+      });
+
+      return;
+    }
+
+    //recibe 3 se realizan la aplicacion del color a la tabla de resultados de medias
     //se realiza el mismo proceso pero para la tabla que refleja los resultados
-    this.tableComparacion.getRows().forEach((row) => {
+    this.tableResultMedias.getRows().forEach((row) => {
       row.getCells().forEach((cell) => {
         const columnName = cell.getColumn().getField();
         const color =
@@ -209,16 +239,31 @@ export class TablaServiceService {
     // Reaplicar colores y resetear comparaciones
     this.restablecerColores();
     this.tablaPorcentajeService.resetComparaciones();
-    this.tablaPorcentajeService.setData(cleanedData);
+    if (this.mode === 'porcentajes') {
+      this.tablaPorcentajeService.setData(cleanedData);
+    } else {
+      //si mode es 'medias'
+      this.tablaPorcentajeService.actualizarTablaResultadosMedias(cleanedData);
+    }
   }
 
   restablecerColores() {
-    // Restablecer los colores de todas las celdas de la tabla
-
-    this.table.getRows().forEach((row) => {
-      row.getCells().forEach((cell) => {
-        cell.getElement().style.backgroundColor = ''; // Eliminar color de fondo
+    if (this.mode === 'porcentajes') {
+      // Restablecer los colores de todas las celdas de la tabla principal, como la tabla de resultado para porcentajes la copia entonces si esta se limpia la de resultados tambien
+      this.table.getRows().forEach((row) => {
+        row.getCells().forEach((cell) => {
+          cell.getElement().style.backgroundColor = ''; // Eliminar color de fondo
+        });
       });
-    });
+    } else {
+      //if mode==='medias'
+      if (this.tableResultMedias) {
+        this.tableResultMedias.getRows().forEach((row) => {
+          row.getCells().forEach((cell) => {
+            cell.getElement().style.backgroundColor = ''; // Eliminar color de fondo
+          });
+        });
+      }
+    }
   }
 }
