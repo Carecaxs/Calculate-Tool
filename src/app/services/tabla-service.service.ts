@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { TabulatorFull as Tabulator } from 'tabulator-tables';
-import { TablaPorcetajesService } from './tabla-porcetajes.service';
+import { CalculosService } from './calculos.service';
 import { BehaviorSubject } from 'rxjs';
 
 @Injectable({
@@ -16,7 +16,7 @@ export class TablaServiceService {
 
   mode: string = ''; //guarda en que seccion estamos: porcentajes, medias, normas
 
-  constructor(private tablaPorcentajeService: TablaPorcetajesService) {} // Inyectar el servicio
+  constructor(private calculosService: CalculosService) {} // Inyectar el servicio
 
   // Método para establecer la instancia de la tabla
   setTableInstance(table: Tabulator) {
@@ -62,8 +62,7 @@ export class TablaServiceService {
       this.table.getRows().forEach((row) => {
         row.getCells().forEach((cell) => {
           const columnName = cell.getColumn().getField();
-          const color =
-            this.tablaPorcentajeService.getColorForComparation(columnName); // Usamos el método para obtener el color
+          const color = this.calculosService.getColorForComparation(columnName); // Usamos el método para obtener el color
           if (color) {
             cell.getElement().style.backgroundColor = color;
           }
@@ -78,8 +77,7 @@ export class TablaServiceService {
       this.tableComparacion.getRows().forEach((row) => {
         row.getCells().forEach((cell) => {
           const columnName = cell.getColumn().getField();
-          const color =
-            this.tablaPorcentajeService.getColorForComparation(columnName); // Usamos el método para obtener el color
+          const color = this.calculosService.getColorForComparation(columnName); // Usamos el método para obtener el color
           if (color) {
             cell.getElement().style.backgroundColor = color;
           }
@@ -94,8 +92,7 @@ export class TablaServiceService {
     this.tableResultMedias.getRows().forEach((row) => {
       row.getCells().forEach((cell) => {
         const columnName = cell.getColumn().getField();
-        const color =
-          this.tablaPorcentajeService.getColorForComparation(columnName); // Usamos el método para obtener el color
+        const color = this.calculosService.getColorForComparation(columnName); // Usamos el método para obtener el color
         if (color) {
           cell.getElement().style.backgroundColor = color;
         }
@@ -123,7 +120,7 @@ export class TablaServiceService {
 
     //  Sincronizar con la tabla de comparación
     const tableData = this.table.getData();
-    this.tablaPorcentajeService.setData(tableData); // Usar el servicio inyectado
+    this.calculosService.setData(tableData); // Usar el servicio inyectado
   }
 
   //Metodo para agregar columnas a la tabla
@@ -197,7 +194,7 @@ export class TablaServiceService {
         headerSort: false,
         resizable: false,
       }));
-    this.tablaPorcentajeService.setColumns(updatedColumns);
+    this.calculosService.setColumns(updatedColumns);
 
     this.applyColorsToColumns(1);
   }
@@ -238,12 +235,12 @@ export class TablaServiceService {
 
     // Reaplicar colores y resetear comparaciones
     this.restablecerColores();
-    this.tablaPorcentajeService.resetComparaciones();
+    this.calculosService.resetComparaciones();
     if (this.mode === 'porcentajes') {
-      this.tablaPorcentajeService.setData(cleanedData);
+      this.calculosService.setData(cleanedData);
     } else {
       //si mode es 'medias'
-      this.tablaPorcentajeService.actualizarTablaResultadosMedias(cleanedData);
+      this.calculosService.actualizarTablaResultadosMedias(cleanedData);
     }
   }
 

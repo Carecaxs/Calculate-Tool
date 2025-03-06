@@ -1,7 +1,7 @@
 import { Component, AfterViewInit, ViewChild, ElementRef } from '@angular/core';
 import { TabulatorFull as Tabulator } from 'tabulator-tables';
 import { SpreadsheetModule } from 'tabulator-tables';
-import { TablaPorcetajesService } from '../../../services/tabla-porcetajes.service';
+import { CalculosService } from '../../../services/calculos.service';
 import { TablaServiceService } from '../../../services/tabla-service.service';
 
 @Component({
@@ -14,7 +14,7 @@ import { TablaServiceService } from '../../../services/tabla-service.service';
 export class TablaComparacionComponent implements AfterViewInit {
   @ViewChild('table') tableElement!: ElementRef;
   constructor(
-    private tablaPorcentajeService: TablaPorcetajesService,
+    private calculosService: CalculosService,
     private tablaService: TablaServiceService
   ) {}
   table!: Tabulator;
@@ -159,21 +159,19 @@ export class TablaComparacionComponent implements AfterViewInit {
 
     this.table.on('tableBuilt', () => {
       // Escuchar cambios en las columnas después de que la tabla se construyó
-      this.tablaPorcentajeService.columns$.subscribe(
-        (columnsFromFirstTable) => {
-          if (columnsFromFirstTable.length > 0) {
-            const updatedColumns = columnsFromFirstTable.map((col) => ({
-              ...col,
-              editor: false, // Deshabilitamos la edición en la tabla de comparación
-              formatter: 'html',
-            }));
-            this.table.setColumns(updatedColumns);
-          }
+      this.calculosService.columns$.subscribe((columnsFromFirstTable) => {
+        if (columnsFromFirstTable.length > 0) {
+          const updatedColumns = columnsFromFirstTable.map((col) => ({
+            ...col,
+            editor: false, // Deshabilitamos la edición en la tabla de comparación
+            formatter: 'html',
+          }));
+          this.table.setColumns(updatedColumns);
         }
-      );
+      });
 
       // Escuchar cambios en los datos después de que la tabla se construyó
-      this.tablaPorcentajeService.data$.subscribe((dataFromFirstTable) => {
+      this.calculosService.data$.subscribe((dataFromFirstTable) => {
         if (dataFromFirstTable.length > 0) {
           this.table.setData(dataFromFirstTable);
           this.tablaService.setTableComparacionInstance(this.table);

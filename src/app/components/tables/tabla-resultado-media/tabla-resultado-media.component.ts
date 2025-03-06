@@ -1,5 +1,5 @@
 import { Component, ElementRef, ViewChild } from '@angular/core';
-import { TablaPorcetajesService } from '../../../services/tabla-porcetajes.service';
+import { CalculosService } from '../../../services/calculos.service';
 import { TablaServiceService } from '../../../services/tabla-service.service';
 import { SpreadsheetModule, Tabulator } from 'tabulator-tables';
 
@@ -15,7 +15,7 @@ export class TablaResultadoMediaComponent {
   table!: Tabulator;
 
   constructor(
-    private tablaPorcentajeService: TablaPorcetajesService,
+    private calculosService: CalculosService,
     private tablaService: TablaServiceService
   ) {}
 
@@ -167,22 +167,20 @@ export class TablaResultadoMediaComponent {
 
     this.table.on('tableBuilt', () => {
       // Escuchar cambios en las columnas después de que la tabla se construyó
-      this.tablaPorcentajeService.columns$.subscribe(
-        (columnsFromFirstTable) => {
-          if (columnsFromFirstTable.length > 0) {
-            const updatedColumns = columnsFromFirstTable.map((col) => ({
-              ...col,
-              editor: false, // Deshabilitamos la edición en la tabla de comparación
-              formatter: 'html',
-            }));
-            this.table.setColumns(updatedColumns);
-          }
-          this.tablaService.setTableResultMediaInstance(this.table);
+      this.calculosService.columns$.subscribe((columnsFromFirstTable) => {
+        if (columnsFromFirstTable.length > 0) {
+          const updatedColumns = columnsFromFirstTable.map((col) => ({
+            ...col,
+            editor: false, // Deshabilitamos la edición en la tabla de comparación
+            formatter: 'html',
+          }));
+          this.table.setColumns(updatedColumns);
         }
-      );
+        this.tablaService.setTableResultMediaInstance(this.table);
+      });
 
       // Suscribirnos al Observable resultados$
-      this.tablaPorcentajeService.resultados$.subscribe((nuevaData) => {
+      this.calculosService.resultados$.subscribe((nuevaData) => {
         // Cada vez que haya nuevos resultados, actualizamos la tabla
         this.table.setData(nuevaData);
       });

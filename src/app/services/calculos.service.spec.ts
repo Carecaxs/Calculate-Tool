@@ -1,6 +1,6 @@
 import { TestBed } from '@angular/core/testing';
 
-import { TablaPorcetajesService } from './tabla-porcetajes.service';
+import { TablaPorcetajesService } from './calculos.service';
 
 describe('TablaPorcetajesService', () => {
   let service: TablaPorcetajesService;

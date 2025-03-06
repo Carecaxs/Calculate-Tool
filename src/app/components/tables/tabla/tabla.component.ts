@@ -4,7 +4,7 @@ import {
   KeybindingsModule,
 } from 'tabulator-tables';
 import { SpreadsheetModule } from 'tabulator-tables';
-import { TablaPorcetajesService } from '../../../services/tabla-porcetajes.service';
+import { CalculosService } from '../../../services/calculos.service';
 import { FormsModule } from '@angular/forms'; // 🔹 Importar FormsModule
 import { ActivatedRoute, Router } from '@angular/router';
 import { TablaServiceService } from '../../../services/tabla-service.service';
@@ -23,7 +23,7 @@ export class TablaComponent implements AfterViewInit {
   mode: string = ''; //guarda en que seccion estamos: porcentajes, medias, normas
 
   constructor(
-    private tablaPorcentajeService: TablaPorcetajesService,
+    private calculosService: CalculosService,
     private tablaService: TablaServiceService,
     private activatedRoute: ActivatedRoute
   ) {} // Inyectamos el servicio en el constructor
@@ -105,7 +105,7 @@ export class TablaComponent implements AfterViewInit {
     // Guardamos la tabla en el servicio despues de que se contruya completamente la tabla
     this.table.on('tableBuilt', () => {
       const tableData = this.table.getData();
-      this.tablaPorcentajeService.setData(tableData); //Guardamos la tabla en el servicio tabla-porcentajes
+      this.calculosService.setData(tableData); //Guardamos la tabla en el servicio tabla-porcentajes
 
       this.tablaService.setTableInstance(this.table); // Guardamos la tabla en el servicio tabla-service para tener la referencia de esta y poder manipularla
       this.tablaService.setTablaLista(true); // Notificamos que la tabla está lista
@@ -116,7 +116,7 @@ export class TablaComponent implements AfterViewInit {
       this.table.redraw(true);
       const tableData = this.table.getData();
 
-      this.tablaPorcentajeService.setData(tableData); //Guardamos la tabla en el servicio tabla-porcentajes
+      this.calculosService.setData(tableData); //Guardamos la tabla en el servicio tabla-porcentajes
       this.tablaService.setTableInstance(this.table); // Guardamos la tabla en el servicio tabla-service para tener la referencia de esta y poder manipularla
 
       // Reaplicar los colores después de redibujar la tabla
@@ -129,7 +129,7 @@ export class TablaComponent implements AfterViewInit {
       // Actualiza automáticamente los datos en el servicio
       const tableData = this.table.getData();
 
-      this.tablaPorcentajeService.setData(tableData); //Guardamos la tabla en el servicio tabla-porcentajes
+      this.calculosService.setData(tableData); //Guardamos la tabla en el servicio tabla-porcentajes
       this.tablaService.setTableInstance(this.table); // Guardamos la tabla en el servicio tabla-service para tener la referencia de esta y poder manipularla
 
       // Reaplicar los colores después de redibujar la tabla

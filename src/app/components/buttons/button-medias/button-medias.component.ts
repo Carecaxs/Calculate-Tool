@@ -3,7 +3,7 @@ import { FormsModule } from '@angular/forms'; // 🔹 Importar FormsModule
 import { CommonModule } from '@angular/common';
 
 import { TablaServiceService } from '../../../services/tabla-service.service'; // 🔹 Importar FormsModule
-import { TablaPorcetajesService } from '../../../services/tabla-porcetajes.service';
+import { CalculosService } from '../../../services/calculos.service';
 
 @Component({
   selector: 'app-button-medias',
@@ -42,7 +42,7 @@ export class ButtonMediasComponent {
 
   constructor(
     private tablaService: TablaServiceService,
-    private tablaPorcentajeService: TablaPorcetajesService
+    private calculosService: CalculosService
   ) {} // Inyectamos el servicio en el constructor
 
   ngAfterViewInit() {
@@ -102,8 +102,7 @@ export class ButtonMediasComponent {
     //identificar si se eliminaron comparaciones para actualizar las comparaciones validas en el servicio
     //obtener el size de las comparaciones actualizadas y las antiguas
     const comparacionesAhora = this.comparaciones.length;
-    const comparacionesAntes =
-      this.tablaPorcentajeService.getComparaciones().length;
+    const comparacionesAntes = this.calculosService.getComparaciones().length;
     if (comparacionesAhora < comparacionesAntes) {
       //si se eliminaron comparaciones se actualizan las comparaciones en el servicio, se eliminan los estilos asignados a las comparaciones ya no existentes
 
@@ -111,7 +110,7 @@ export class ButtonMediasComponent {
       const comparacionesValidas = this.filtrarComparacionesValidas();
 
       //actualizar comparaciones en el servicio
-      this.tablaPorcentajeService.setComparaciones(comparacionesValidas);
+      this.calculosService.setComparaciones(comparacionesValidas);
       //actualizar los colores (eliminar los colores de las comparaciones no existentes)
       this.tablaService.applyColorsToColumns(1);
 
@@ -137,7 +136,7 @@ export class ButtonMediasComponent {
     // Filtrar solo las comparaciones completas (cuando ambas columnas están seleccionadas)
     const comparacionesValidas = this.filtrarComparacionesValidas();
 
-    this.tablaPorcentajeService.setComparaciones(comparacionesValidas);
+    this.calculosService.setComparaciones(comparacionesValidas);
     this.tablaService.applyColorsToColumns(1);
   }
 
@@ -146,7 +145,7 @@ export class ButtonMediasComponent {
     //se envia los datos de la tabla original y los elementos de comparacion
     const data = this.tablaService.getTableInstance();
 
-    this.tablaPorcentajeService.ejecutarCalculoMedias(data.getData());
+    this.calculosService.ejecutarCalculoMedias(data.getData());
 
     //aplicar los colores seleccionado a las columnas de las tablas
     this.tablaService.applyColorsToColumns(3);
@@ -226,7 +225,7 @@ export class ButtonMediasComponent {
   //este metodo va ser usado al reducir la cantidad de columnas para validar que no este una columna que ya no exista dentro de comparaciones validas
   verificarComparacionesInvalidas() {
     //obtenemos las comparaciones exitentes validadas desde el servicio
-    const comparaciones = this.tablaPorcentajeService.getComparaciones();
+    const comparaciones = this.calculosService.getComparaciones();
 
     //variable a retornar
     let hayComparacionesInvalidas = false;
@@ -260,7 +259,7 @@ export class ButtonMediasComponent {
         );
         return col1Existe && col2Existe;
       });
-      this.tablaPorcentajeService.setComparaciones(comparacionesValidas);
+      this.calculosService.setComparaciones(comparacionesValidas);
     }
   }
 }
