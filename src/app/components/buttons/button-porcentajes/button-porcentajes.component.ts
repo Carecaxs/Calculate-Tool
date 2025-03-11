@@ -51,7 +51,9 @@ export class ButtonComponent {
   ngAfterViewInit() {
     this.tablaService.tablaLista$.subscribe((estado) => {
       if (estado) {
-        this.cargarColumnasActuales();
+        setTimeout(() => {
+          this.cargarColumnasActuales();
+        });
       }
     });
   }

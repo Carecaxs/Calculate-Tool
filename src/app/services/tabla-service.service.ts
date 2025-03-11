@@ -53,6 +53,10 @@ export class TablaServiceService {
     this.mode = mode;
   }
 
+  getMode() {
+    return this.mode;
+  }
+
   // Método para aplicar colores a las columnas desde el servicio, recibe como parametro un indicador, 1 si quiere que se refleje el color solo en la tabla rincipal
   // recibe 2 para aplicar color a la tabla de resultado en porcentajes
   //recibe 3 para aplicar color a la tabla de resultado en medias
@@ -262,5 +266,119 @@ export class TablaServiceService {
         });
       }
     }
+  }
+
+  /**
+   * Actualiza la cantidad de "pares de columnas" en modo porcentajes-normas.
+   * newPairCount = 1 => "A", "A Norma"
+   * newPairCount = 2 => "A", "A Norma", "B", "B Norma"
+   * etc.
+   */
+  updateColumnCountPorcentajesNormas(newPairCount: number) {
+    // 1) Obtener las columnas actuales
+    const currentColumns = this.table.getColumnDefinitions();
+
+    // (Opcional) Bloquear redibujado para rendimiento
+    this.table.blockRedraw();
+
+    // 2) Ignorar la primera columna (por ejemplo "Letras")
+    //    para contar cuántos pares existen
+    //    Asumimos que la primera columna es "Letras"
+    const mainColumns = currentColumns.slice(1); // sin "Letras"
+    const currentPairCount = mainColumns.length / 2;
+
+    // 3) Si el nuevo número de pares es mayor que el actual, hay que AGREGAR pares
+    if (newPairCount > currentPairCount) {
+      const pairsToAdd = newPairCount - currentPairCount;
+      // Construimos los pares y los agregamos
+      const newColumns: any[] = [];
+      for (let i = 0; i < pairsToAdd; i++) {
+        // El índice de la nueva pareja se basa en currentPairCount + i
+        const pairIndex = currentPairCount + i;
+        const pairCols = this.buildNormasColumnPair(pairIndex);
+        newColumns.push(...pairCols);
+      }
+
+      // Agregar las nuevas columnas a las ya existentes
+      // Manteniendo la primera (Letras) y lo que ya había
+      const updatedDefs = [...currentColumns, ...newColumns];
+      this.table.setColumns(updatedDefs);
+
+      // 3.1) También hay que inicializar las celdas vacías en las filas existentes
+      const rows = this.table.getRows();
+      rows.forEach((row) => {
+        let updateData: any = {};
+        newColumns.forEach((col) => {
+          // Establecer "" (vacío) en la nueva columna
+          updateData[col.field] = '';
+        });
+        row.update(updateData);
+      });
+    }
+
+    // 4) Si el nuevo número de pares es menor que el actual, se deben ELIMINAR pares
+    else if (newPairCount < currentPairCount) {
+      const pairsToRemove = currentPairCount - newPairCount;
+      // Cada par son 2 columnas
+      const columnsToDeleteCount = pairsToRemove * 2;
+
+      // Tomamos las últimas "columnsToDeleteCount" columnas
+      // del array principal (sin tocar la primera "Letras")
+      const startIndex = currentColumns.length - columnsToDeleteCount;
+      const columnsToDelete = this.table.getColumns().slice(startIndex);
+      columnsToDelete.forEach((col) => col.delete());
+    }
+
+    // 5) Forzar un redibujado final
+    this.table.redraw(true);
+
+    // 6) Actualizar la definición de columnas en el servicio
+    const updatedColumns = this.table
+      .getColumnDefinitions()
+      .map((col: any) => ({
+        title: col.title,
+        field: col.field,
+        headerSort: false,
+        resizable: false,
+        editor: col.editor, // o "number", etc. según requieras
+      }));
+    this.calculosService.setColumns(updatedColumns);
+
+    // (Opcional) Desbloquear redibujado
+    // this.table.restoreRedraw(); // si deseas
+  }
+
+  /**
+   * Retorna 2 columnas:
+   *  - "A" (campo "a")
+   *  - "A Norma" (campo "a-norma")
+   * basado en index => 0->A, 1->B, etc.
+   */
+  buildNormasColumnPair(index: number): any[] {
+    const letter = this.getColumnTitle(index); // 0->A,1->B...
+    const mainField = letter.toLowerCase();
+    const normaField = mainField + '-norma';
+
+    return [
+      {
+        title: letter,
+        field: mainField,
+        headerSort: false,
+        editor: 'number',
+        resizable: false,
+      },
+      {
+        title: letter + ' Norma',
+        field: normaField,
+        headerSort: false,
+        editor: 'number',
+        // Ejemplo: deshabilitar edición en fila Base
+        editable: (cell: any) => {
+          const rowData = cell.getRow().getData();
+          return rowData.id === 'Base' ? false : 'number';
+        },
+        resizable: false,
+      },
+    ];
   }
 }

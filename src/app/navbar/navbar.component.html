@@ -13,6 +13,29 @@
       [routerLinkActiveOptions]="{ exact: false }"
       >Medias</a
     >
-    <a href="#">Normas</a>
+    <!-- Contenedor desplegable de "Normas" -->
+    <div
+      class="dropdown"
+      (click)="toggleDropdown()"
+      [class.active]="isNormasActive()"
+    >
+      <span class="dropdown-title">Normas</span>
+
+      <!-- Submenú que se muestra solo cuando "showDropdown" es true -->
+      <div class="dropdown-content" *ngIf="showDropdown">
+        <a
+          [routerLink]="['/medias-normas']"
+          routerLinkActive="active"
+          [routerLinkActiveOptions]="{ exact: false }"
+          >Medias</a
+        >
+        <a
+          [routerLink]="['/porcentajes-normas']"
+          routerLinkActive="active"
+          [routerLinkActiveOptions]="{ exact: false }"
+          >Porcentajes</a
+        >
+      </div>
+    </div>
   </div>
 </div>

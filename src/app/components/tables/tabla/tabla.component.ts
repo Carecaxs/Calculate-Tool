@@ -1,70 +1,140 @@
-import { Component, AfterViewInit, ViewChild, ElementRef } from '@angular/core';
 import {
-  TabulatorFull as Tabulator,
-  KeybindingsModule,
-} from 'tabulator-tables';
+  Component,
+  AfterViewInit,
+  ViewChild,
+  ElementRef,
+  OnInit,
+} from '@angular/core';
+import { TabulatorFull as Tabulator } from 'tabulator-tables';
 import { SpreadsheetModule } from 'tabulator-tables';
 import { CalculosService } from '../../../services/calculos.service';
-import { FormsModule } from '@angular/forms'; // 🔹 Importar FormsModule
-import { ActivatedRoute, Router } from '@angular/router';
+import { ActivatedRoute } from '@angular/router';
 import { TablaServiceService } from '../../../services/tabla-service.service';
 
 @Component({
   selector: 'app-tabla',
   standalone: true,
-  imports: [FormsModule],
   templateUrl: './tabla.component.html',
   styleUrl: './tabla.component.css',
 })
-export class TablaComponent implements AfterViewInit {
-  @ViewChild('table') tableElement!: ElementRef; // Referencia al elemento HTML donde se insertará la tabla
-  numeroDeFilas: number = 0; // Propiedad para el número de filas
-  table!: Tabulator; //se inicializara antes de ser utilizada(!:)
-  mode: string = ''; //guarda en que seccion estamos: porcentajes, medias, normas
+export class TablaComponent implements OnInit, AfterViewInit {
+  @ViewChild('table') tableElement!: ElementRef;
+  table!: Tabulator;
+  mode: string = '';
 
   constructor(
     private calculosService: CalculosService,
     private tablaService: TablaServiceService,
     private activatedRoute: ActivatedRoute
-  ) {} // Inyectamos el servicio en el constructor
+  ) {}
+
+  ngOnInit(): void {
+    this.activatedRoute.data.subscribe((data) => {
+      this.mode = data['mode'] || '';
+      this.tablaService.setMode(this.mode);
+
+      //  Si la tabla ya existe, recargar datos y columnas
+      if (this.table) {
+        this.updateTable();
+      }
+    });
+  }
 
   ngAfterViewInit(): void {
-    Tabulator.registerModule([SpreadsheetModule]); //Permite activar características avanzadas de hojas de cálculo.
-
-    this.mode = this.activatedRoute.snapshot.data['mode'];
-    this.tablaService.setMode(this.mode);
-
-    const initialData = [];
-
-    if (this.mode == 'porcentajes') {
-      //Datos para inicializar las filas en la tabla en el modulo porcentajes
-
-      for (let i = 0; i < 11; i++) {
-        initialData.push({ id: i === 0 ? 'Base' : i }); // "Base" para la primera fila, números para las siguientes
-      }
-    } else if (this.mode == 'medias') {
-      //Datos para inicializar las filas en la tabla en el modulo medias
-
-      for (let i = 0; i < 3; i++) {
-        initialData.push({
-          id: i === 0 ? 'Base' : i === 1 ? 'Media' : 'Desviación estándar',
-        });
-      }
-    } else {
-      //Datos para inicializar las filas en la tabla en el modulo normas
-
-      //esto se deja asi pero hay que cambiarlo, aun no se ha trabajado en normas
-      for (let i = 0; i < 11; i++) {
-        initialData.push({ id: i === 0 ? 'Base' : i }); // "Base" para la primera fila, números para las siguientes
-      }
+    if (!this.tableElement) {
+      return;
     }
 
-    this.table = new Tabulator(this.tableElement.nativeElement, {
-      //accede al elemento div #table
+    Tabulator.registerModule([SpreadsheetModule]);
 
-      data: initialData, //le pasamos los datos inicializados
-      columns: [
-        { title: 'Letras', field: 'id', headerSort: false, resizable: false },
+    this.createTable();
+  }
+
+  createTable(): void {
+    const initialData = this.getInitialData();
+    const columns = this.getColumns();
+
+    this.table = new Tabulator(this.tableElement.nativeElement, {
+      data: initialData,
+      columns: columns,
+      layout: 'fitDataFill',
+      editTriggerEvent: 'dblclick',
+      editorEmptyValue: undefined,
+      selectableRange: true,
+      selectableRangeColumns: true,
+      selectableRangeRows: true,
+      selectableRangeClearCells: true,
+      clipboard: true,
+      clipboardCopyStyled: false,
+      clipboardCopyConfig: { rowHeaders: false, columnHeaders: false },
+      clipboardCopyRowRange: 'range',
+      clipboardPasteParser: 'range',
+      clipboardPasteAction: 'range',
+      history: true,
+    });
+
+    this.registerTableEvents();
+  }
+
+  updateTable(): void {
+    const newData = this.getInitialData();
+    const newColumns = this.getColumns();
+
+    this.table.replaceData(newData);
+    this.table.setColumns(newColumns);
+    this.table.redraw(true);
+  }
+
+  getInitialData(): any[] {
+    const data = [];
+    switch (this.mode) {
+      case 'porcentajes':
+        for (let i = 0; i < 11; i++) {
+          data.push({ id: i === 0 ? 'Base' : i });
+        }
+        break;
+      case 'medias':
+        for (let i = 0; i < 3; i++) {
+          data.push({
+            id: i === 0 ? 'Base' : i === 1 ? 'Media' : 'Desviación estándar',
+          });
+        }
+        break;
+      case 'medias-normas':
+        for (let i = 0; i < 4; i++) {
+          data.push({
+            id:
+              i === 0
+                ? 'Base'
+                : i === 1
+                ? 'Media'
+                : i === 2
+                ? 'Desviación estándar'
+                : 'Norma',
+          });
+        }
+        break;
+      case 'porcentajes-normas':
+        for (let i = 0; i < 11; i++) {
+          data.push({ id: i === 0 ? 'Base' : i });
+        }
+        break;
+      default:
+        for (let i = 0; i < 11; i++) {
+          data.push({ id: i === 0 ? 'Base' : i });
+        }
+    }
+    return data;
+  }
+
+  getColumns(): any[] {
+    const baseColumns = [
+      { title: 'Letras', field: 'id', headerSort: false, resizable: false },
+    ];
+
+    if (this.mode === 'medias-normas') {
+      return [
+        ...baseColumns,
         {
           title: 'A',
           field: 'a',
@@ -72,68 +142,103 @@ export class TablaComponent implements AfterViewInit {
           editor: 'number',
           resizable: false,
         },
-        {
-          title: 'B',
-          field: 'b',
-          headerSort: false,
-          editor: 'number',
-          resizable: false,
-        },
-      ],
-      layout: 'fitDataFill',
-      editTriggerEvent: 'dblclick',
-      editorEmptyValue: undefined,
+      ];
+    }
 
-      selectableRange: true,
-      selectableRangeColumns: true,
-      selectableRangeRows: true,
-      selectableRangeClearCells: true,
+    if (this.mode === 'porcentajes-normas') {
+      return this.buildPorcentajesNormasColumns();
+    }
 
-      clipboard: true,
-      clipboardCopyStyled: false,
-      clipboardCopyConfig: {
-        rowHeaders: false,
-        columnHeaders: false,
+    return [
+      ...baseColumns,
+      {
+        title: 'A',
+        field: 'a',
+        headerSort: false,
+        editor: 'number',
+        resizable: false,
       },
-      clipboardCopyRowRange: 'range',
-      clipboardPasteParser: 'range',
-      clipboardPasteAction: 'range',
+      {
+        title: 'B',
+        field: 'b',
+        headerSort: false,
+        editor: 'number',
+        resizable: false,
+      },
+    ];
+  }
 
-      history: true,
-    });
-
-    // Guardamos la tabla en el servicio despues de que se contruya completamente la tabla
+  registerTableEvents(): void {
     this.table.on('tableBuilt', () => {
-      const tableData = this.table.getData();
-      this.calculosService.setData(tableData); //Guardamos la tabla en el servicio tabla-porcentajes
-
-      this.tablaService.setTableInstance(this.table); // Guardamos la tabla en el servicio tabla-service para tener la referencia de esta y poder manipularla
-      this.tablaService.setTablaLista(true); // Notificamos que la tabla está lista
+      this.calculosService.setData(this.table.getData());
+      this.tablaService.setTableInstance(this.table);
+      this.tablaService.setTablaLista(true);
     });
 
-    // Escuchar cuando los datos cambian (incluye pegado desde Excel)
     this.table.on('dataChanged', () => {
       this.table.redraw(true);
-      const tableData = this.table.getData();
-
-      this.calculosService.setData(tableData); //Guardamos la tabla en el servicio tabla-porcentajes
-      this.tablaService.setTableInstance(this.table); // Guardamos la tabla en el servicio tabla-service para tener la referencia de esta y poder manipularla
-
-      // Reaplicar los colores después de redibujar la tabla
+      this.calculosService.setData(this.table.getData());
+      this.tablaService.setTableInstance(this.table);
       this.tablaService.applyColorsToColumns(1);
-    }); //fin
+    });
 
-    // Registrar el evento `cellEdited` que escucha cuando una celda se modifica
     this.table.on('cellEdited', () => {
       this.table.redraw(true);
-      // Actualiza automáticamente los datos en el servicio
-      const tableData = this.table.getData();
-
-      this.calculosService.setData(tableData); //Guardamos la tabla en el servicio tabla-porcentajes
-      this.tablaService.setTableInstance(this.table); // Guardamos la tabla en el servicio tabla-service para tener la referencia de esta y poder manipularla
-
-      // Reaplicar los colores después de redibujar la tabla
+      this.calculosService.setData(this.table.getData());
+      this.tablaService.setTableInstance(this.table);
       this.tablaService.applyColorsToColumns(1);
-    }); //fin
+    });
+  }
+
+  // Ejemplo: genera "n" columnas de datos + sus columnas "Norma".
+  // Si n=1 => A, A Norma
+  // Si n=2 => A, A Norma, B, B Norma, etc.
+  buildPorcentajesNormasColumns(): any[] {
+    const columns = [
+      {
+        title: 'Letras',
+        field: 'id',
+        headerSort: false,
+        resizable: false,
+      },
+    ];
+
+    const letter = this.getLetterTitle(0); // A, B, ...
+
+    return [
+      ...columns,
+      {
+        title: letter,
+        field: letter.toLowerCase(),
+        headerSort: false,
+        editor: 'number',
+        resizable: false,
+      },
+      {
+        title: letter + ' Norma',
+        field: letter.toLowerCase() + '-norma',
+        headerSort: false,
+        editor: 'number',
+        editable: (cell: any) => {
+          // no editable si row.id === 'Base'
+          const rowData = cell.getRow().getData();
+          if (rowData.id === 'Base') return false;
+          return 'number';
+        },
+        resizable: false,
+      },
+    ];
+  }
+
+  // Método auxiliar para convertir 0->A, 1->B, 2->C...
+  private getLetterTitle(index: number): string {
+    // Versión sencilla (solo 26 columnas máx):
+    // index=0 => "A", 1=>"B"... 25=>"Z"
+    let title = '';
+    while (index >= 0) {
+      title = String.fromCharCode((index % 26) + 65) + title;
+      index = Math.floor(index / 26) - 1;
+    }
+    return title;
   }
 }

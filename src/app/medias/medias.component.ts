@@ -9,8 +9,8 @@ import { TablaResultadoMediaComponent } from '../components/tables/tabla-resulta
   standalone: true,
   imports: [
     TablaComponent,
-    ButtonMediasComponent,
     TablaResultadoMediaComponent,
+    ButtonMediasComponent,
   ],
   templateUrl: './medias.component.html',
   styleUrl: './medias.component.css',

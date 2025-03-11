@@ -14,7 +14,7 @@ import { CalculosService } from '../../../services/calculos.service';
 })
 export class ButtonMediasComponent {
   numeroDeColumnas: number = 2; // esta variable se sincroniza con el input de cantidad de columnas
-  columnaOptions: number[] = Array.from({ length: 29 }, (_, i) => i + 2); // propiedad que Genera las opciones de columna [2, 3, ..., 30]
+  columnaOptions: number[] = Array.from({ length: 30 }, (_, i) => i + 2); // propiedad que Genera las opciones de columna [2, 3, ..., 30]
 
   comparacionesOptions: number[] = Array.from({ length: 8 }, (_, i) => i + 1); // propiedad que Genera las opciones de comparaciones [1, ... 8,]
   numeroDeComparaciones: number = 1; // esta variable se sincroniza con el input de cantidad de comparaciones
@@ -43,12 +43,17 @@ export class ButtonMediasComponent {
   constructor(
     private tablaService: TablaServiceService,
     private calculosService: CalculosService
-  ) {} // Inyectamos el servicio en el constructor
+  ) {}
 
   ngAfterViewInit() {
     this.tablaService.tablaLista$.subscribe((estado) => {
       if (estado) {
-        this.cargarColumnasActuales();
+        //limpiar las tablas por si tienen datos
+        this.limpiarDatos();
+
+        setTimeout(() => {
+          this.cargarColumnasActuales();
+        });
       }
     });
   }
@@ -66,24 +71,22 @@ export class ButtonMediasComponent {
 
   //metodo para actualizar la cantidad de columnas, recibe el nuevo numero de columnas, tiene que ser mayor a 1
   actualizarColumnas(numeroDeColumnas: number) {
-    if (numeroDeColumnas >= 2) {
-      //  Guardar la cantidad actual de columnas ANTES de modificar nada
-      const oldColumnCount = this.currentColumns.length;
+    //  Guardar la cantidad actual de columnas ANTES de modificar nada
+    const oldColumnCount = this.currentColumns.length;
 
-      this.tablaService.updateColumnCount(Number(numeroDeColumnas) + 1);
-      this.cargarColumnasActuales();
+    this.tablaService.updateColumnCount(Number(numeroDeColumnas) + 1);
+    this.cargarColumnasActuales();
 
-      //Compara la nueva cantidad con la anterior
-      const newColumnCount = this.currentColumns.length;
-      if (newColumnCount < oldColumnCount) {
-        // Se han reducido columnas, así que revisamos comparaciones desde el servicio
-        //esto para que no hayan comparaciones validas de alguna columna que ya no exista
-        this.verificarComparacionesInvalidas();
-        this.ejecutarCalculo();
-      } else {
-        //en caso de aumentar las columnas se vuelven a filtrar las comparaciones validas, esto para asegurar que el servicio tenga todas las comparaciones
-        this.onComparacionesDifSig();
-      }
+    //Compara la nueva cantidad con la anterior
+    const newColumnCount = this.currentColumns.length;
+    if (newColumnCount < oldColumnCount) {
+      // Se han reducido columnas, así que revisamos comparaciones desde el servicio
+      //esto para que no hayan comparaciones validas de alguna columna que ya no exista
+      this.verificarComparacionesInvalidas();
+      this.ejecutarCalculo();
+    } else {
+      //en caso de aumentar las columnas se vuelven a filtrar las comparaciones validas, esto para asegurar que el servicio tenga todas las comparaciones
+      this.onComparacionesDifSig();
     }
   }
 

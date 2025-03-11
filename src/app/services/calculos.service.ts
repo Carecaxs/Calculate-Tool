@@ -401,4 +401,186 @@ export class CalculosService {
     });
     return [resultRow];
   }
+
+  public ejecutarCalculoMediaNorma(data: any[]) {
+    // 1) Buscar filas
+    const baseRow = data.find((row) => row.id === 'Base');
+    const mediaRow = data.find((row) => row.id === 'Media');
+    const desvRow = data.find((row) => {
+      // Quitar acentos si tu "Desviación" tiene tildes
+      const idSinAcentos = row.id
+        .normalize('NFD')
+        .replace(/\p{Diacritic}/gu, '')
+        .toLowerCase();
+      return idSinAcentos.includes('desviacion');
+    });
+    const normaRow = data.find((row) => row.id.toLowerCase().includes('norma'));
+
+    if (!baseRow || !mediaRow || !desvRow || !normaRow) {
+      console.warn('Faltan filas Base, Media, Desviación o Norma');
+      return;
+    }
+
+    // 2) Tomar los valores
+    //    Asumiendo que solo hay 1 columna (A).
+    const n = Number(baseRow['a']);
+    const media = Number(mediaRow['a']);
+    const sd = Number(desvRow['a']);
+    const norma = Number(normaRow['a']);
+
+    // 3) Calcular la diferencia y el test z
+    //    z = (Media - Norma) / (sd / sqrt(n))
+    if (n > 1 && sd > 0) {
+      const diff = media - norma;
+      const se = sd / Math.sqrt(n);
+      const z = diff / se;
+
+      // 4) Comparar con valor crítico
+      const isSignificativo = Math.abs(z) > this.t_teorico; // 1.96 ~ 95%
+
+      // 5) Construir el texto final
+      //    Por ejemplo: "4.36 (✓)" o "4.36 (✗)"
+      let resultadoStr = media.toFixed(2);
+      if (isSignificativo) {
+        resultadoStr +=
+          ' <strong>(<i class="fas fa-check" style="color:green;"></i>)</strong>';
+      } else {
+        resultadoStr +=
+          ' <strong>(<i class="fas fa-times" style="color:red;"></i>)</strong>';
+      }
+
+      // 6) Guardar en la "tabla de resultados"
+      //    Supongamos que creas un array con una sola fila
+      const resultRow: any = { id: 'Resultado' };
+      resultRow['a'] = resultadoStr;
+
+      // 7) Emitirlo en un BehaviorSubject para la tabla de resultados
+      this.resultadosSubject.next([resultRow]);
+    }
+  }
+
+  // =========================================================
+  //  Lógica "Porcentajes Normas (muestras distintas)"
+  // =========================================================
+  /**
+   * Asume que la fila "Base" contiene la base (n) para cada columna principal (p.ej. "a"=89).
+   * Luego, cada fila (1,2,3...) tiene un valor en "a" (porcentaje) y en "a-norma" (norma).
+   * Se calcula z = (p - p0) / sqrt( p0*(1-p0)/n ) para cada fila y pareja, y se anota ✓ o ✗.
+   */
+  public ejecutarCalculoPorcentajesNormas(data: any[]) {
+    // 1) Localiza la fila "Base" (contiene la base n para cada columna principal)
+    const baseRow = data.find((row) => row.id === 'Base');
+    if (!baseRow) {
+      console.warn('No se encontró la fila "Base".');
+      return;
+    }
+
+    // 2) Identificar parejas de columnas: ("a","a-norma"), ("b","b-norma"), etc.
+    const allKeys = Object.keys(baseRow).filter((k) => k !== 'id');
+    const pairs = this.encontrarParejas(allKeys);
+    if (pairs.length === 0) {
+      console.warn('No se encontraron columnas con "-norma".');
+      return;
+    }
+
+    // 3) Crear un array de resultados
+    const resultados: any[] = [];
+
+    data.forEach((row) => {
+      // Copiamos la fila Base tal cual, o la omitimos. Aquí la copiamos:
+      if (row.id === 'Base') {
+        resultados.push({ ...row });
+        return;
+      }
+
+      // Para filas normales (1..n)
+      const newRow: any = { id: row.id };
+
+      pairs.forEach((pair) => {
+        const colPrincipal = pair.col; // ej. "a"
+        const colNorma = pair.norma; // ej. "a-norma"
+
+        // Lee la celda principal y la norma como cadenas (para verificar si están vacías)
+        const rawValue = (row[colPrincipal] ?? '').toString().trim();
+        const rawNorma = (row[colNorma] ?? '').toString().trim();
+
+        // Si la celda principal está vacía => mostrar en blanco
+        if (!rawValue) {
+          newRow[colPrincipal] = '';
+          // La norma, si existe, la mostramos con "%" o en blanco si tampoco hay nada
+          newRow[colNorma] = rawNorma ? rawNorma + '%' : '';
+          return;
+        }
+
+        // Convertir a número
+        const valorNum = parseFloat(rawValue);
+        if (isNaN(valorNum)) {
+          // Si no es un número válido, lo dejamos en blanco
+          newRow[colPrincipal] = '';
+          newRow[colNorma] = rawNorma ? rawNorma + '%' : '';
+          return;
+        }
+
+        // Hacemos lo mismo con la norma
+        if (!rawNorma) {
+          // Si no hay norma, deja la norma en blanco
+          newRow[colNorma] = '';
+        }
+        const normaNum = parseFloat(rawNorma);
+        // Si parseFloat da NaN, quedará en blanco
+        if (isNaN(normaNum)) {
+          newRow[colNorma] = '';
+        }
+
+        // Tomar la base (n) desde la fila Base en la columna principal
+        const baseNum = parseFloat(String(baseRow[colPrincipal])) || 0; // ej. 89 => n=89
+
+        // Convierto a decimal
+        const p = valorNum / 100;
+        const p0 = normaNum / 100;
+
+        // Texto base (ej. "34%")
+        let resultStr = `${normaNum}`;
+
+        // Test z
+        if (baseNum > 1 && p0 > 0 && p0 < 1) {
+          const diff = p - p0;
+          const se = Math.sqrt((p0 * (1 - p0)) / baseNum);
+          const z = se > 0 ? diff / se : 0;
+          const isSignificativo = Math.abs(z) > this.t_teorico; // Ej. 1.96
+
+          if (isSignificativo) {
+            resultStr += ' <strong style="color:green;">(✓)</strong>';
+          } else {
+            resultStr += ' <strong style="color:red;">(✗)</strong>';
+          }
+        }
+
+        newRow[colPrincipal] = `${valorNum}`;
+        newRow[colNorma] = resultStr;
+      });
+
+      resultados.push(newRow);
+    });
+
+    // 4) Emitir los resultados
+    this.resultadosSubject.next(resultados);
+  }
+
+  /**
+   * Encuentra parejas (col, col-norma) en allKeys.
+   */
+  private encontrarParejas(
+    allKeys: string[]
+  ): { col: string; norma: string }[] {
+    const pairs: { col: string; norma: string }[] = [];
+    const normas = allKeys.filter((k) => k.endsWith('-norma'));
+    normas.forEach((normKey) => {
+      const mainKey = normKey.replace('-norma', '');
+      if (allKeys.includes(mainKey)) {
+        pairs.push({ col: mainKey, norma: normKey });
+      }
+    });
+    return pairs;
+  }
 }
