@@ -51,6 +51,7 @@ export class TablaServiceService {
 
   setMode(mode: string) {
     this.mode = mode;
+    this.calculosService.setColumns([]);
   }
 
   getMode() {

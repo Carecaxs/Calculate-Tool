@@ -176,17 +176,23 @@ export class TablaComponent implements OnInit, AfterViewInit {
     });
 
     this.table.on('dataChanged', () => {
-      this.table.redraw(true);
+      if (document.body.contains(this.tableElement.nativeElement)) {
+        this.table.redraw(true);
+      }
       this.calculosService.setData(this.table.getData());
       this.tablaService.setTableInstance(this.table);
-      this.tablaService.applyColorsToColumns(1);
+      if (this.mode == 'porcentajes' || this.mode == 'medias') {
+        this.tablaService.applyColorsToColumns(1);
+      }
     });
 
     this.table.on('cellEdited', () => {
       this.table.redraw(true);
       this.calculosService.setData(this.table.getData());
       this.tablaService.setTableInstance(this.table);
-      this.tablaService.applyColorsToColumns(1);
+      if (this.mode == 'porcentajes' || this.mode == 'medias') {
+        this.tablaService.applyColorsToColumns(1);
+      }
     });
   }
 

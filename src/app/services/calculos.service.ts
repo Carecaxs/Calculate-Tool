@@ -89,7 +89,17 @@ export class CalculosService {
       return this.processRow(row, bases, this.comparacionesSeleccionadas);
     });
 
-    this.dataSubject.next(processedData); // Actualiza los datos en el observable
+    // 4) Emitir los resultados (filtrando filas vacías)
+    const finalResults = processedData.filter((row) => {
+      // Siempre se conserva la fila "Base" (si la deseas)
+      if (row.id === 'Base') return true;
+
+      // Verificar que al menos un campo (distinto de 'id') tenga contenido
+      return Object.keys(row)
+        .filter((key) => key !== 'id')
+        .some((key) => row[key] && row[key].toString().trim() !== '');
+    });
+    this.dataSubject.next(finalResults); // Actualiza los datos en el observable
   }
 
   // Método para procesar cada fila y calcular diferencias significativas
@@ -407,7 +417,6 @@ export class CalculosService {
     const baseRow = data.find((row) => row.id === 'Base');
     const mediaRow = data.find((row) => row.id === 'Media');
     const desvRow = data.find((row) => {
-      // Quitar acentos si tu "Desviación" tiene tildes
       const idSinAcentos = row.id
         .normalize('NFD')
         .replace(/\p{Diacritic}/gu, '')
@@ -421,42 +430,56 @@ export class CalculosService {
       return;
     }
 
-    // 2) Tomar los valores
-    //    Asumiendo que solo hay 1 columna (A).
-    const n = Number(baseRow['a']);
-    const media = Number(mediaRow['a']);
-    const sd = Number(desvRow['a']);
-    const norma = Number(normaRow['a']);
+    // 2) Obtener todas las columnas (excepto "id")
+    //    Ej: ["a","b","c"] si existen
+    const allCols = Object.keys(baseRow).filter((c) => c !== 'id');
 
-    // 3) Calcular la diferencia y el test z
-    //    z = (Media - Norma) / (sd / sqrt(n))
-    if (n > 1 && sd > 0) {
-      const diff = media - norma;
-      const se = sd / Math.sqrt(n);
-      const z = diff / se;
+    // 3) Construir un objeto para la fila de resultados
+    //    (Por ejemplo, "Resultado" para cada columna)
+    const resultRow: any = { id: 'Resultado' };
 
-      // 4) Comparar con valor crítico
-      const isSignificativo = Math.abs(z) > this.t_teorico; // 1.96 ~ 95%
+    // 4) Iterar sobre cada columna (a, b, c, etc.)
+    allCols.forEach((col) => {
+      // Tomar los valores de la fila Base, Media, Desviación y Norma en la columna "col"
+      const n = Number(baseRow[col]);
+      const media = Number(mediaRow[col]);
+      const sd = Number(desvRow[col]);
+      const norma = Number(normaRow[col]);
 
-      // 5) Construir el texto final
-      //    Por ejemplo: "4.36 (✓)" o "4.36 (✗)"
-      let resultadoStr = media.toFixed(2);
-      if (isSignificativo) {
-        resultadoStr +=
-          ' <strong>(<i class="fas fa-check" style="color:green;"></i>)</strong>';
-      } else {
-        resultadoStr +=
-          ' <strong>(<i class="fas fa-times" style="color:red;"></i>)</strong>';
+      // Validar que haya datos para no calcular en celdas vacías
+      if (isNaN(n) || isNaN(media) || isNaN(sd) || isNaN(norma)) {
+        // Si alguno es NaN, dejar en blanco
+        resultRow[col] = '';
+        return;
       }
 
-      // 6) Guardar en la "tabla de resultados"
-      //    Supongamos que creas un array con una sola fila
-      const resultRow: any = { id: 'Resultado' };
-      resultRow['a'] = resultadoStr;
+      // 5) Calcular la diferencia y el test z
+      //    z = (Media - Norma) / (sd / sqrt(n))
+      if (n > 1 && sd > 0) {
+        const diff = media - norma;
+        const se = sd / Math.sqrt(n);
+        const z = diff / se;
 
-      // 7) Emitirlo en un BehaviorSubject para la tabla de resultados
-      this.resultadosSubject.next([resultRow]);
-    }
+        // 6) Comparar con valor crítico
+        const isSignificativo = Math.abs(z) > this.t_teorico;
+
+        // 7) Construir el texto final, ej. "4.36 (✓)" o "4.36 (✗)"
+        let resultadoStr = media.toFixed(2);
+        if (isSignificativo) {
+          resultadoStr += ' <strong style="color:green;">(✓)</strong>';
+        } else {
+          resultadoStr += ' <strong style="color:red;">(✗)</strong>';
+        }
+
+        resultRow[col] = resultadoStr;
+      } else {
+        // Si no hay condiciones para calcular (n <= 1 o sd <= 0), dejar en blanco o poner algo
+        resultRow[col] = media.toFixed(2); // o ''
+      }
+    });
+
+    // 8) Emitir la fila de resultados
+    this.resultadosSubject.next([resultRow]);
   }
 
   // =========================================================
@@ -563,8 +586,18 @@ export class CalculosService {
       resultados.push(newRow);
     });
 
-    // 4) Emitir los resultados
-    this.resultadosSubject.next(resultados);
+    // 4) Emitir los resultados (filtrando filas vacías)
+    const finalResults = resultados.filter((row) => {
+      // Siempre se conserva la fila "Base" (si la deseas)
+      if (row.id === 'Base') return true;
+
+      // Verificar que al menos un campo (distinto de 'id') tenga contenido
+      return Object.keys(row)
+        .filter((key) => key !== 'id')
+        .some((key) => row[key] && row[key].toString().trim() !== '');
+    });
+
+    this.resultadosSubject.next(finalResults);
   }
 
   /**

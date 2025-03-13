@@ -5,6 +5,11 @@ import { MediasNormasComponent } from './components/normas/medias-normas/medias-
 
 export const routes: Routes = [
   {
+    path: '',
+    redirectTo: 'porcentajes', // Redirige a la vista de porcentajes
+    pathMatch: 'full',
+  },
+  {
     path: 'porcentajes',
     component: PorcentajesComponent,
     data: { mode: 'porcentajes' },

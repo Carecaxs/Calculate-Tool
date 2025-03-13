@@ -4,6 +4,12 @@ import { CalculosService } from '../../../services/calculos.service';
 import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 
+/**
+ * Componente para manejar la sección de Normas en la aplicación.
+ * Permite configurar filas y columnas de la tabla, ejecutar cálculos
+ * y limpiar los datos.
+ */
+
 @Component({
   selector: 'app-button-normas',
   standalone: true,
@@ -12,11 +18,30 @@ import { CommonModule } from '@angular/common';
   styleUrl: './button-normas.component.css',
 })
 export class ButtonNormasComponent {
-  numeroDeFilas: number = 10; //esta variable se sincroniza con el input de cantidad de filas
-  numeroDeColumnas: number = 1; // esta variable se sincroniza con el input de cantidad de columnas
-  columnaOptions: number[] = Array.from({ length: 30 }, (_, i) => i + 1); // propiedad que Genera las opciones de columna [2, 3, ..., 30]
+  /**
+   * Cantidad de filas, se sincroniza con el input correspondiente.
+   * Valor por defecto: 10.
+   */
+  numeroDeFilas: number = 10;
 
+  /**
+   * Cantidad de columnas, se sincroniza con el select correspondiente.
+   */
+  numeroDeColumnas!: number;
+
+  /**
+   * Opciones disponibles para la cantidad de columnas.
+   */
+  columnaOptions: number[] = [];
+
+  /**
+   * Modo actual de la sección: puede ser 'porcentajes-normas' o 'medias-normas'.
+   */
   mode: string = '';
+
+  /**
+   * Columnas actuales de la tabla (excluyendo la primera columna "letras").
+   */
   currentColumns: any[] = [];
 
   constructor(
@@ -24,23 +49,44 @@ export class ButtonNormasComponent {
     private calculosService: CalculosService
   ) {}
 
+  /**
+   * Hook que se ejecuta después de inicializar la vista.
+   * Suscribe a los cambios en la tabla y ajusta la configuración
+   * inicial (limpiar datos, establecer opciones de columnas, etc.).
+   */
+
   ngAfterViewInit() {
     this.tablaService.tablaLista$.subscribe((estado) => {
       if (estado) {
-        //limpiar las tablas por si tienen datos
+        // Limpiar la tabla por si tiene datos previos
         this.limpiarDatos();
 
         setTimeout(() => {
-          this.cargarColumnasActuales();
+          // Obtener el modo actual (porcentajes-normas o medias-normas)
+          this.mode = this.tablaService.getMode();
 
-          this.mode = this.tablaService.getMode(); //obtener si estamos en la seccion de porcentajes con norma o medias con norma
+          // Definir las opciones de columnas según el modo (5 para porcentaje contra norma - 10 para media contra norma)
+          if (this.mode === 'porcentajes-normas') {
+            this.columnaOptions = Array.from({ length: 5 }, (_, i) => i + 1);
+          } else {
+            this.columnaOptions = Array.from({ length: 10 }, (_, i) => i + 1);
+          }
+
+          // Por defecto, se selecciona la opción 1 en el select
+          this.numeroDeColumnas = 1;
+
+          // Cargar las columnas actuales de la tabla
+          this.cargarColumnasActuales();
         });
       }
     });
   }
 
+  /**
+   * Carga la información de las columnas actuales de la tabla,
+   * omitiendo la primera columna (generalmente "letras").
+   */
   cargarColumnasActuales() {
-    //alamacenar las columnas de la tabla, usamos slice para saltarnos la primera columna que va ser "letras"
     this.currentColumns = this.tablaService
       .getColumnsData()
       .slice(1)
@@ -52,42 +98,60 @@ export class ButtonNormasComponent {
 
   //metodo para actualizar la cantidad de columnas, recibe el nuevo numero de columnas
   actualizarColumnas(numeroDeColumnas: number) {
-    this.tablaService.updateColumnCountPorcentajesNormas(
-      Number(numeroDeColumnas)
-    );
+    if (this.mode === 'porcentajes-normas') {
+      this.tablaService.updateColumnCountPorcentajesNormas(
+        Number(numeroDeColumnas)
+      );
+    } else {
+      // Sumamos 1 si consideramos la columna "letras" como fija
+      this.tablaService.updateColumnCount(Number(numeroDeColumnas) + 1);
+    }
+
     this.cargarColumnasActuales();
   }
 
-  //funcion que limpia los datos de la tabla
+  /**
+   * Limpia los datos de la tabla, dejándola vacía.
+   */
   limpiarDatos() {
     this.tablaService.limpiarDatosTabla();
   }
 
-  //ejecuta el calculo con las comparaciones contenidas
+  /**
+   * Ejecuta el cálculo correspondiente (media o porcentajes)
+   * según el modo seleccionado.
+   */
   ejecutarCalculo() {
     //se envia los datos de la tabla original y los elementos de comparacion
     const data = this.tablaService.getTableInstance().getData();
 
-    this.mode === 'medias-normas'
-      ? this.calculosService.ejecutarCalculoMediaNorma(data)
-      : this.calculosService.ejecutarCalculoPorcentajesNormas(data);
-
-    //aplicar los colores seleccionado a las columnas de las tablas
-    //this.tablaService.applyColorsToColumns(3);
+    if (this.mode === 'medias-normas') {
+      this.calculosService.ejecutarCalculoMediaNorma(data);
+    } else {
+      this.calculosService.ejecutarCalculoPorcentajesNormas(data);
+    }
   }
 
-  //metodo para evitar que al seleccionar cantidad de filas el usuario ingrese un cero de primero, ya despues de lo permite por ejemplo que quiera poner 10,20,etc...
+  /**
+   * Evita que se ingrese '0' o '-' como primer carácter en el input
+   * de la cantidad de filas.
+   */
   evitarCeroInicial(event: KeyboardEvent) {
     if (
       (event.key === '0' &&
         (!this.numeroDeFilas || this.numeroDeFilas.toString().length === 0)) ||
       event.key === '-'
     ) {
-      event.preventDefault(); // Bloquea la tecla "0" si es el primer carácter
+      // Bloquea la tecla "0" si es el primer carácter
+      event.preventDefault();
     }
   }
 
-  //metodo para actualizar la cantidad de filas, recibe el nuevo numero de filas, tiene que ser mayor a 1
+  /**
+   * Actualiza la cantidad de filas de la tabla si el valor ingresado
+   * es mayor que 0.
+   * numeroDeFilas Nueva cantidad de filas.
+   */
   actualizarFilas(numeroDeFilas: number) {
     if (numeroDeFilas > 0) {
       this.tablaService.updateRowCount(numeroDeFilas);
