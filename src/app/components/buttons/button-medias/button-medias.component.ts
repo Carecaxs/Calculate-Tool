@@ -16,6 +16,8 @@ export class ButtonMediasComponent {
   numeroDeColumnas: number = 2; // esta variable se sincroniza con el input de cantidad de columnas
   columnaOptions: number[] = Array.from({ length: 30 }, (_, i) => i + 2); // propiedad que Genera las opciones de columna [2, 3, ..., 30]
 
+  diferenciaSeleccionada: number = 95; // esta variable se sincroniza con el input de diferencia significativa
+
   comparacionesOptions: number[] = Array.from({ length: 8 }, (_, i) => i + 1); // propiedad que Genera las opciones de comparaciones [1, ... 8,]
   numeroDeComparaciones: number = 1; // esta variable se sincroniza con el input de cantidad de comparaciones
 
@@ -145,6 +147,7 @@ export class ButtonMediasComponent {
 
   //ejecuta el calculo con las comparaciones contenidas
   ejecutarCalculo() {
+    this.enviarDS();
     //se envia los datos de la tabla original y los elementos de comparacion
     const data = this.tablaService.getTableInstance();
 
@@ -264,5 +267,12 @@ export class ButtonMediasComponent {
       });
       this.calculosService.setComparaciones(comparacionesValidas);
     }
+  }
+
+  //funcion para enviar la diferencia significativa al servicio
+  enviarDS() {
+    this.calculosService.setDiferenciaSifnificativa(
+      this.diferenciaSeleccionada
+    );
   }
 }

@@ -37,7 +37,8 @@ export class CalculosService {
   // Método para establecer la diferencia significativa (t_teorico)
   setDiferenciaSifnificativa(ds: number) {
     //aca se recibe 90 o 95, en base a ello seleccionamos 1.96 para el 95% o 1.645 para el 90%
-    this.t_teorico = ds === 95 ? 1.96 : 1.645;
+    this.t_teorico = ds == 95 ? 1.96 : 1.645;
+    console.log(this.t_teorico);
   }
 
   //metodo para retornar las comparaciones validas actuales
@@ -83,10 +84,30 @@ export class CalculosService {
     const filteredData = [...data]; // Crea una copia de los datos originales
     const bases = data.find((fila) => fila.id === 'Base'); // Obtiene la fila base
 
-    // Procesa cada fila llamando a `processRow`
+    // Filtrar solo las comparaciones completas
+    let comparacionesValidas = this.comparacionesSeleccionadas.filter(
+      (c) => c.col1 && c.col2
+    );
+
+    // Si no hay comparaciones válidas, se crea una comparación virtual
+    // que abarque TODAS las columnas (excepto 'id')
+    if (comparacionesValidas.length === 0) {
+      const allKeys = Object.keys(bases).filter((key) => key !== 'id');
+      if (allKeys.length > 0) {
+        comparacionesValidas = [
+          {
+            col1: allKeys[0],
+            col2: allKeys[allKeys.length - 1],
+            color: 'transparent', // El color no importa aquí
+          },
+        ];
+      }
+    }
+
+    // Procesa cada fila usando las comparaciones (virtual o reales)
     const processedData = filteredData.map((row) => {
       if (row.id === 'Base') return { ...row }; // Si es la base, se devuelve tal cual
-      return this.processRow(row, bases, this.comparacionesSeleccionadas);
+      return this.processRow(row, bases, comparacionesValidas);
     });
 
     // 4) Emitir los resultados (filtrando filas vacías)
@@ -176,7 +197,11 @@ export class CalculosService {
               z > this.t_teorico && Number(currentValue) > Number(compareValue)
             );
           })
-          .map((compareColumn) => compareColumn.toUpperCase())
+          .map((compareColumn) => {
+            return this.t_teorico === 1.96
+              ? compareColumn.toUpperCase()
+              : compareColumn.toLowerCase();
+          })
           .join(', ');
 
         // Si se encontró alguna diferencia, se acumula
@@ -251,58 +276,72 @@ export class CalculosService {
       colResults[col] = '';
     });
 
-    // 3) Recorre cada comparación => define el rango => valida => si válido, calcula
-    this.comparacionesSeleccionadas.forEach((comparacion) => {
-      const idx1 = allCols.indexOf(comparacion.col1);
-      const idx2 = allCols.indexOf(comparacion.col2);
-      if (idx1 === -1 || idx2 === -1) {
-        // Si la columna no existe, se omite
-        return;
-      }
-      const start = Math.min(idx1, idx2);
-      const end = Math.max(idx1, idx2);
-      const rangeCols = allCols.slice(start, end + 1);
-
-      // Validamos si TODO el rango está completo (Base, Media, Desviación)
-      const rangoValido = this.isRangeComplete(
-        rangeCols,
-        baseRow,
-        mediaRow,
-        desvRow
-      );
-      if (!rangoValido) {
-        // Si NO es válido => se quedan en blanco (colResults ya está en blanco)
-        return;
-      }
-
-      // Si es válido => calculamos diferencias
+    // 3) Si no hay comparaciones válidas (o si la única comparación está incompleta),
+    // se realiza el cálculo en TODAS las columnas.
+    if (this.comparacionesSeleccionadas.length === 0) {
       const partialResults = this.calcularDiferenciasEnRango(
-        rangeCols,
+        allCols,
         baseRow,
         mediaRow,
         desvRow
       );
-
-      // Fusionamos partialResults en colResults
-      rangeCols.forEach((col) => {
+      allCols.forEach((col) => {
         colResults[col] = partialResults[col];
       });
-    });
+    } else {
+      // 4) Recorre cada comparación => define el rango => valida => si válido, calcula
+      this.comparacionesSeleccionadas.forEach((comparacion) => {
+        const idx1 = allCols.indexOf(comparacion.col1);
+        const idx2 = allCols.indexOf(comparacion.col2);
+        if (idx1 === -1 || idx2 === -1) {
+          // Si la columna no existe, se omite
+          return;
+        }
+        const start = Math.min(idx1, idx2);
+        const end = Math.max(idx1, idx2);
+        const rangeCols = allCols.slice(start, end + 1);
 
-    // 4) Construimos la nueva fila "Media" con los valores resultantes
+        // Validamos si TODO el rango está completo (Base, Media, Desviación)
+        const rangoValido = this.isRangeComplete(
+          rangeCols,
+          baseRow,
+          mediaRow,
+          desvRow
+        );
+        if (!rangoValido) {
+          // Si NO es válido => se quedan en blanco (colResults ya está en blanco)
+          return;
+        }
+
+        // Si es válido => calculamos diferencias
+        const partialResults = this.calcularDiferenciasEnRango(
+          rangeCols,
+          baseRow,
+          mediaRow,
+          desvRow
+        );
+
+        // Fusionamos partialResults en colResults
+        rangeCols.forEach((col) => {
+          colResults[col] = partialResults[col];
+        });
+      });
+    }
+
+    // 5) Construimos la nueva fila "Media" con los valores resultantes
     const newMediaRow = { ...mediaRow };
     allCols.forEach((col) => {
       newMediaRow[col] = colResults[col];
     });
 
-    // 5) Reemplaza la fila "Media" en data
+    // 6) Reemplaza la fila "Media" en data
     const newData = data.map((row) => (row.id === 'Media' ? newMediaRow : row));
     newData.forEach((item, idx) => (data[idx] = item));
 
-    // 6) Actualiza la tabla principal
+    // 7) Actualiza la tabla principal
     this.dataSubject.next(data);
 
-    // 7) Actualiza la tabla de resultados
+    // 8) Actualiza la tabla de resultados
     this.actualizarTablaResultadosMedias(data);
   }
 
@@ -375,7 +414,11 @@ export class CalculosService {
           if (se > 0) {
             const z = Math.abs(diff / se);
             if (z > this.t_teorico && diff > 0) {
-              dsAccumulado.push(colComparada.toUpperCase());
+              dsAccumulado.push(
+                this.t_teorico === 1.96
+                  ? colComparada.toUpperCase()
+                  : colComparada.toLowerCase()
+              );
             }
           }
         });
@@ -412,6 +455,19 @@ export class CalculosService {
     return [resultRow];
   }
 
+  /**
+   * Calcula la diferencia significativa entre la Media y la Norma para cada columna.
+   * - Localiza las filas "Base" (n), "Media", "Desviación" y "Norma".
+   * - Para cada columna (ej. "A", "B", etc.):
+   *    1) Obtiene n, media, desviación estándar y norma.
+   *    2) Calcula z = (Media - Norma) / (sd / sqrt(n)).
+   *    3) Si |z| > t_teorico, hay diferencia significativa:
+   *       - Muestra flecha verde hacia arriba si Media > Norma.
+   *       - Muestra flecha verde hacia abajo si Media < Norma.
+   *    4) Si no es significativo o no hay datos suficientes, no se muestra flecha.
+   * - Finalmente, emite la fila de resultados en resultadosSubject.
+   */
+
   public ejecutarCalculoMediaNorma(data: any[]) {
     // 1) Buscar filas
     const baseRow = data.find((row) => row.id === 'Base');
@@ -431,51 +487,50 @@ export class CalculosService {
     }
 
     // 2) Obtener todas las columnas (excepto "id")
-    //    Ej: ["a","b","c"] si existen
     const allCols = Object.keys(baseRow).filter((c) => c !== 'id');
 
     // 3) Construir un objeto para la fila de resultados
-    //    (Por ejemplo, "Resultado" para cada columna)
     const resultRow: any = { id: 'Resultado' };
 
     // 4) Iterar sobre cada columna (a, b, c, etc.)
     allCols.forEach((col) => {
-      // Tomar los valores de la fila Base, Media, Desviación y Norma en la columna "col"
       const n = Number(baseRow[col]);
       const media = Number(mediaRow[col]);
       const sd = Number(desvRow[col]);
       const norma = Number(normaRow[col]);
 
-      // Validar que haya datos para no calcular en celdas vacías
+      // Validar datos
       if (isNaN(n) || isNaN(media) || isNaN(sd) || isNaN(norma)) {
-        // Si alguno es NaN, dejar en blanco
         resultRow[col] = '';
         return;
       }
 
-      // 5) Calcular la diferencia y el test z
-      //    z = (Media - Norma) / (sd / sqrt(n))
+      // 5) Construir el valor base (ej. "4.36")
+      let resultadoStr = media.toFixed(2);
+
+      // 6) Calcular el test z = (Media - Norma) / (sd / sqrt(n))
       if (n > 1 && sd > 0) {
         const diff = media - norma;
         const se = sd / Math.sqrt(n);
         const z = diff / se;
-
-        // 6) Comparar con valor crítico
         const isSignificativo = Math.abs(z) > this.t_teorico;
 
-        // 7) Construir el texto final, ej. "4.36 (✓)" o "4.36 (✗)"
-        let resultadoStr = media.toFixed(2);
+        // 7) Agregar flechas si es significativo
         if (isSignificativo) {
-          resultadoStr += ' <strong style="color:green;">(✓)</strong>';
-        } else {
-          resultadoStr += ' <strong style="color:red;">(✗)</strong>';
+          if (diff > 0) {
+            // Flecha verde hacia arriba
+            resultadoStr +=
+              ' <i class="fas fa-arrow-up" style="color: green;"></i>';
+          } else if (diff < 0) {
+            // Flecha verde hacia abajo
+            resultadoStr +=
+              ' <i class="fas fa-arrow-down" style="color: green;"></i>';
+          }
+          // Si diff === 0, no agregamos nada
         }
-
-        resultRow[col] = resultadoStr;
-      } else {
-        // Si no hay condiciones para calcular (n <= 1 o sd <= 0), dejar en blanco o poner algo
-        resultRow[col] = media.toFixed(2); // o ''
       }
+
+      resultRow[col] = resultadoStr;
     });
 
     // 8) Emitir la fila de resultados
@@ -485,11 +540,18 @@ export class CalculosService {
   // =========================================================
   //  Lógica "Porcentajes Normas (muestras distintas)"
   // =========================================================
-  /**
-   * Asume que la fila "Base" contiene la base (n) para cada columna principal (p.ej. "a"=89).
-   * Luego, cada fila (1,2,3...) tiene un valor en "a" (porcentaje) y en "a-norma" (norma).
-   * Se calcula z = (p - p0) / sqrt( p0*(1-p0)/n ) para cada fila y pareja, y se anota ✓ o ✗.
+  /*
+   * Asume que la fila "Base" contiene la base (n) para cada columna principal (por ejemplo, "a" = 89).
+   * Cada fila (1,2,3,...) tiene un valor en la columna principal (porcentaje) y en la columna "a-norma" (norma).
+   * Para cada par de columnas (por ejemplo, "a" y "a-norma"), se calcula el estadístico z:
+   *   z = (p - p0) / sqrt( p0 * (1 - p0) / n )
+   * donde p es el porcentaje de la fila y p0 es la norma (ambos convertidos a decimal).
+   * Si |z| es mayor que el valor crítico (t_teorico, p.ej. 1.96 para 95%):
+   *   - Se muestra una flecha verde hacia arriba (↑) si p > p0.
+   *   - Se muestra una flecha verde hacia abajo (↓) si p < p0.
+   * Si la diferencia no es significativa, no se muestra ningún símbolo.
    */
+
   public ejecutarCalculoPorcentajesNormas(data: any[]) {
     // 1) Localiza la fila "Base" (contiene la base n para cada columna principal)
     const baseRow = data.find((row) => row.id === 'Base');
@@ -510,7 +572,7 @@ export class CalculosService {
     const resultados: any[] = [];
 
     data.forEach((row) => {
-      // Copiamos la fila Base tal cual, o la omitimos. Aquí la copiamos:
+      // Copiamos la fila Base tal cual
       if (row.id === 'Base') {
         resultados.push({ ...row });
         return;
@@ -523,14 +585,13 @@ export class CalculosService {
         const colPrincipal = pair.col; // ej. "a"
         const colNorma = pair.norma; // ej. "a-norma"
 
-        // Lee la celda principal y la norma como cadenas (para verificar si están vacías)
+        // Lee la celda principal y la norma como cadenas
         const rawValue = (row[colPrincipal] ?? '').toString().trim();
         const rawNorma = (row[colNorma] ?? '').toString().trim();
 
-        // Si la celda principal está vacía => mostrar en blanco
+        // Si la celda principal está vacía => mostramos en blanco
         if (!rawValue) {
           newRow[colPrincipal] = '';
-          // La norma, si existe, la mostramos con "%" o en blanco si tampoco hay nada
           newRow[colNorma] = rawNorma ? rawNorma + '%' : '';
           return;
         }
@@ -538,19 +599,16 @@ export class CalculosService {
         // Convertir a número
         const valorNum = parseFloat(rawValue);
         if (isNaN(valorNum)) {
-          // Si no es un número válido, lo dejamos en blanco
           newRow[colPrincipal] = '';
           newRow[colNorma] = rawNorma ? rawNorma + '%' : '';
           return;
         }
 
-        // Hacemos lo mismo con la norma
+        // Mismo procedimiento para la norma
         if (!rawNorma) {
-          // Si no hay norma, deja la norma en blanco
           newRow[colNorma] = '';
         }
         const normaNum = parseFloat(rawNorma);
-        // Si parseFloat da NaN, quedará en blanco
         if (isNaN(normaNum)) {
           newRow[colNorma] = '';
         }
@@ -558,29 +616,37 @@ export class CalculosService {
         // Tomar la base (n) desde la fila Base en la columna principal
         const baseNum = parseFloat(String(baseRow[colPrincipal])) || 0; // ej. 89 => n=89
 
-        // Convierto a decimal
+        // Convertir a decimal
         const p = valorNum / 100;
         const p0 = normaNum / 100;
 
-        // Texto base (ej. "34%")
-        let resultStr = `${normaNum}`;
+        // Texto base (ej. "34")
+        let resultStr = `${valorNum}`;
 
-        // Test z
+        // Test z (se calcula si la base y la norma tienen valores adecuados)
         if (baseNum > 1 && p0 > 0 && p0 < 1) {
           const diff = p - p0;
           const se = Math.sqrt((p0 * (1 - p0)) / baseNum);
           const z = se > 0 ? diff / se : 0;
-          const isSignificativo = Math.abs(z) > this.t_teorico; // Ej. 1.96
+          const isSignificativo = Math.abs(z) > this.t_teorico; // Ej. 1.96 para 95%
 
           if (isSignificativo) {
-            resultStr += ' <strong style="color:green;">(✓)</strong>';
-          } else {
-            resultStr += ' <strong style="color:red;">(✗)</strong>';
+            if (diff > 0) {
+              // Diferencia significativa y valor mayor que norma: flecha hacia arriba
+              resultStr +=
+                ' <i class="fas fa-arrow-up" style="color: green;"></i>';
+            } else if (diff < 0) {
+              // Diferencia significativa y valor menor que norma: flecha hacia abajo
+              resultStr +=
+                ' <i class="fas fa-arrow-down" style="color: green;"></i>';
+            }
+            // Si diff es 0, no se muestra nada
           }
+          // Si no es significativo, no se añade ningún símbolo
         }
 
-        newRow[colPrincipal] = `${valorNum}`;
-        newRow[colNorma] = resultStr;
+        newRow[colPrincipal] = resultStr;
+        newRow[colNorma] = `${normaNum}`;
       });
 
       resultados.push(newRow);
@@ -588,10 +654,7 @@ export class CalculosService {
 
     // 4) Emitir los resultados (filtrando filas vacías)
     const finalResults = resultados.filter((row) => {
-      // Siempre se conserva la fila "Base" (si la deseas)
       if (row.id === 'Base') return true;
-
-      // Verificar que al menos un campo (distinto de 'id') tenga contenido
       return Object.keys(row)
         .filter((key) => key !== 'id')
         .some((key) => row[key] && row[key].toString().trim() !== '');

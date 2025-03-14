@@ -142,8 +142,8 @@ export class ButtonComponent {
     }
   }
 
-  //funcion para manejar cambio de diferencia significativa
-  onDiferenciaChange() {
+  //funcion para enviar la diferencia significativa al servicio
+  enviarDS() {
     this.calculosService.setDiferenciaSifnificativa(
       this.diferenciaSeleccionada
     );
@@ -172,6 +172,7 @@ export class ButtonComponent {
 
   //ejecuta el calculo con las comparaciones contenidas
   ejecutarCalculo() {
+    this.enviarDS();
     //se instancia la tabla original, se  recuperan los datos y se envien como parametro
     const data = this.tablaService.getTableInstance();
     this.calculosService.ejecutarCalculoPorcentaje(data.getData());

@@ -52,6 +52,19 @@ export class TablaResultadoNormaComponent {
       },
       columns: columns,
       layout: 'fitDataFill',
+      rowFormatter: (row) => {
+        const rowData = row.getData();
+        // Si es la fila "Base", aplicamos estilo a las columnas que terminen en "-norma"
+        if (rowData['id'] === 'Base') {
+          row.getCells().forEach((cell) => {
+            const field = cell.getColumn().getField();
+            if (field && field.endsWith('-norma')) {
+              cell.getElement().style.backgroundColor = '#E0E0E0';
+              cell.getElement().style.pointerEvents = 'none';
+            }
+          });
+        }
+      },
       selectableRange: true,
       selectableRangeColumns: true,
       selectableRangeRows: true,

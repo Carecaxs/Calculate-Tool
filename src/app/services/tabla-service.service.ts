@@ -379,6 +379,14 @@ export class TablaServiceService {
           return rowData.id === 'Base' ? false : 'number';
         },
         resizable: false,
+        formatter: (cell: any) => {
+          const rowData = cell.getRow().getData();
+          if (rowData.id === 'Base') {
+            cell.getElement().style.backgroundColor = '#E0E0E0'; // Color gris
+            cell.getElement().style.pointerEvents = 'none'; // Deshabilita la interacción
+          }
+          return cell.getValue();
+        },
       },
     ];
   }

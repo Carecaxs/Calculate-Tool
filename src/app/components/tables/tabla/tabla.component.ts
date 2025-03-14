@@ -228,10 +228,24 @@ export class TablaComponent implements OnInit, AfterViewInit {
         editable: (cell: any) => {
           // no editable si row.id === 'Base'
           const rowData = cell.getRow().getData();
-          if (rowData.id === 'Base') return false;
+          if (rowData.id === 'Base') {
+            return false;
+          }
           return 'number';
         },
         resizable: false,
+
+        // Formatter personalizado para aplicar estilos
+        formatter: (cell: any) => {
+          const rowData = cell.getRow().getData();
+          if (rowData.id === 'Base') {
+            // Aplica el color gris y deshabilita la interacción
+            cell.getElement().style.backgroundColor = '#E0E0E0';
+            cell.getElement().style.pointerEvents = 'none';
+          }
+          // Retorna el valor formateado (puedes ajustar si requieres formato específico)
+          return cell.getValue();
+        },
       },
     ];
   }

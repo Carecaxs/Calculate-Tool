@@ -44,6 +44,8 @@ export class ButtonNormasComponent {
    */
   currentColumns: any[] = [];
 
+  diferenciaSeleccionada: number = 95; // esta variable se sincroniza con el input de diferencia significativa
+
   constructor(
     private tablaService: TablaServiceService,
     private calculosService: CalculosService
@@ -122,6 +124,8 @@ export class ButtonNormasComponent {
    * según el modo seleccionado.
    */
   ejecutarCalculo() {
+    //enviar la ds seleccionada la servicio
+    this.enviarDS();
     //se envia los datos de la tabla original y los elementos de comparacion
     const data = this.tablaService.getTableInstance().getData();
 
@@ -156,5 +160,12 @@ export class ButtonNormasComponent {
     if (numeroDeFilas > 0) {
       this.tablaService.updateRowCount(numeroDeFilas);
     }
+  }
+
+  //funcion para enviar la diferencia significativa al servicio
+  enviarDS() {
+    this.calculosService.setDiferenciaSifnificativa(
+      this.diferenciaSeleccionada
+    );
   }
 }
