@@ -1,7 +1,8 @@
 import { Routes } from '@angular/router';
-import { PorcentajesComponent } from './porcentajes/porcentajes.component';
-import { MediasComponent } from './medias/medias.component';
-import { MediasNormasComponent } from './components/normas/medias-normas/medias-normas.component';
+
+import { PorcentajesComponent } from './pages/porcentajes/porcentajes.component';
+import { MediasComponent } from './pages/medias/medias.component';
+import { MediasNormasComponent } from './pages/normas/medias-normas/medias-normas.component';
 
 export const routes: Routes = [
   {

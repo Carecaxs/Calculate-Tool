@@ -1,18 +1,18 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 
-import { TablaComparacionComponent } from './tabla-comparacion.component';
+import { MediasNormasComponent } from './medias-normas.component';
 
-describe('TablaComparacionComponent', () => {
-  let component: TablaComparacionComponent;
-  let fixture: ComponentFixture<TablaComparacionComponent>;
+describe('MediasNormasComponent', () => {
+  let component: MediasNormasComponent;
+  let fixture: ComponentFixture<MediasNormasComponent>;
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [TablaComparacionComponent]
+      imports: [MediasNormasComponent]
     })
     .compileComponents();
 
-    fixture = TestBed.createComponent(TablaComparacionComponent);
+    fixture = TestBed.createComponent(MediasNormasComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
   });

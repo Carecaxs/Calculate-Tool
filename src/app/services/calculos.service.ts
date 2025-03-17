@@ -38,7 +38,6 @@ export class CalculosService {
   setDiferenciaSifnificativa(ds: number) {
     //aca se recibe 90 o 95, en base a ello seleccionamos 1.96 para el 95% o 1.645 para el 90%
     this.t_teorico = ds == 95 ? 1.96 : 1.645;
-    console.log(this.t_teorico);
   }
 
   //metodo para retornar las comparaciones validas actuales
