@@ -9,7 +9,7 @@ import { TabulatorFull as Tabulator } from 'tabulator-tables';
 import { SpreadsheetModule } from 'tabulator-tables';
 import { CalculosService } from '../../../services/calculos.service';
 import { ActivatedRoute } from '@angular/router';
-import { TablaServiceService } from '../../../services/tabla-service.service';
+import { TablaService } from '../../../services/tabla.service';
 
 @Component({
   selector: 'app-tabla',
@@ -24,7 +24,7 @@ export class TablaComponent implements OnInit, AfterViewInit {
 
   constructor(
     private calculosService: CalculosService,
-    private tablaService: TablaServiceService,
+    private tablaService: TablaService,
     private activatedRoute: ActivatedRoute
   ) {}
 

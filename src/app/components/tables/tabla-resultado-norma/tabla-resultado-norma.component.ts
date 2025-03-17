@@ -1,7 +1,7 @@
 import { Component, ElementRef, ViewChild } from '@angular/core';
 import { SpreadsheetModule, Tabulator } from 'tabulator-tables';
 import { CalculosService } from '../../../services/calculos.service';
-import { TablaServiceService } from '../../../services/tabla-service.service';
+import { TablaService } from '../../../services/tabla.service';
 
 @Component({
   selector: 'app-tabla-resultado-norma',
@@ -17,7 +17,7 @@ export class TablaResultadoNormaComponent {
 
   constructor(
     private calculosService: CalculosService,
-    private tablaService: TablaServiceService
+    private tablaService: TablaService
   ) {}
 
   ngOnInit(): void {
@@ -157,7 +157,7 @@ export class TablaResultadoNormaComponent {
       // Si el modo NO es "porcentajes-normas", usamos las columnas del observable,
       // de lo contrario, se mantiene la definición manual.
 
-      this.calculosService.columns$.subscribe((columnsFromOriginal) => {
+      this.tablaService.columns$.subscribe((columnsFromOriginal) => {
         if (columnsFromOriginal && columnsFromOriginal.length > 0) {
           const updatedColumns = columnsFromOriginal.map((col) => ({
             ...col,

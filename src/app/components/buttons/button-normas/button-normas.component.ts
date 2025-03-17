@@ -1,8 +1,9 @@
 import { Component } from '@angular/core';
-import { TablaServiceService } from '../../../services/tabla-service.service';
+
 import { CalculosService } from '../../../services/calculos.service';
 import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
+import { TablaService } from '../../../services/tabla.service';
 
 /**
  * Componente para manejar la sección de Normas en la aplicación.
@@ -47,7 +48,7 @@ export class ButtonNormasComponent {
   diferenciaSeleccionada: number = 95; // esta variable se sincroniza con el input de diferencia significativa
 
   constructor(
-    private tablaService: TablaServiceService,
+    private tablaService: TablaService,
     private calculosService: CalculosService
   ) {}
 

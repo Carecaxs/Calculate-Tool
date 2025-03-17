@@ -1,6 +1,5 @@
 import { Injectable } from '@angular/core';
-import { BehaviorSubject, from } from 'rxjs';
-import { create, all, forEach } from 'mathjs';
+import { BehaviorSubject } from 'rxjs';
 
 @Injectable({
   providedIn: 'root',
@@ -8,9 +7,6 @@ import { create, all, forEach } from 'mathjs';
 export class CalculosService {
   // Subject para almacenar y emitir datos de la tabla
   private dataSubject = new BehaviorSubject<any[]>([]);
-
-  // Subject para almacenar y emitir las columnas de la tabla
-  private columnsSubject = new BehaviorSubject<any[]>([]);
 
   // Valor teórico para determinar diferencia significativa (por defecto 1.96 para 95%)
   private t_teorico: number = 1.96;
@@ -24,9 +20,6 @@ export class CalculosService {
 
   // Observable para que otros componentes puedan suscribirse a los datos
   data$ = this.dataSubject.asObservable();
-
-  // Observable para las columnas de la tabla
-  columns$ = this.columnsSubject.asObservable();
 
   // 1) BehaviorSubject que guardará la "tabla de resultados de las medias" //nuevo
   private resultadosSubject = new BehaviorSubject<any[]>([]);
@@ -217,11 +210,6 @@ export class CalculosService {
     });
 
     return processedRow;
-  }
-
-  // Método para actualizar la lista de columnas en la tabla
-  setColumns(columns: any[]) {
-    this.columnsSubject.next(columns);
   }
 
   // Método para obtener el color de una columna

@@ -2,7 +2,7 @@ import { Component, AfterViewInit, ViewChild, ElementRef } from '@angular/core';
 import { TabulatorFull as Tabulator } from 'tabulator-tables';
 import { SpreadsheetModule } from 'tabulator-tables';
 import { CalculosService } from '../../../services/calculos.service';
-import { TablaServiceService } from '../../../services/tabla-service.service';
+import { TablaService } from '../../../services/tabla.service';
 
 @Component({
   selector: 'app-tabla-resultado-porcentajes-medias',
@@ -18,7 +18,7 @@ export class TablaResultadoPorcentajeMediasComponent implements AfterViewInit {
 
   constructor(
     private calculosService: CalculosService,
-    private tablaService: TablaServiceService
+    private tablaService: TablaService
   ) {}
 
   ngOnInit(): void {
@@ -174,7 +174,7 @@ export class TablaResultadoPorcentajeMediasComponent implements AfterViewInit {
   private setupTableBuiltSubscriptions(): void {
     this.table.on('tableBuilt', () => {
       // Actualiza columnas a partir del observable columns$
-      this.calculosService.columns$.subscribe((columnsFromFirstTable) => {
+      this.tablaService.columns$.subscribe((columnsFromFirstTable) => {
         if (columnsFromFirstTable.length > 0) {
           const updatedColumns = columnsFromFirstTable.map((col: any) => ({
             ...col,
