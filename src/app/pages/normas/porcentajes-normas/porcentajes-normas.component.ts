@@ -1,6 +1,6 @@
 import { Component } from '@angular/core';
 import { ButtonNormasComponent } from '../../../components/buttons/button-normas/button-normas.component';
-import { TablaComponent } from '../../../components/tables/tabla/tabla.component';
+import { TablaComponent } from '../../../components/tables/tabla-principal/tabla.component';
 import { TablaResultadoNormaComponent } from '../../../components/tables/tabla-resultado-norma/tabla-resultado-norma.component';
 
 @Component({

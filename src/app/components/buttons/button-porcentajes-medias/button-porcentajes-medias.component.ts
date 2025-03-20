@@ -147,8 +147,10 @@ export class ButtonComponentPorcentajeMedias {
       //actualizar los colores (eliminar los colores de las comparaciones no existentes)
       this.tablaService.applyColorsToColumns(1);
 
-      //tambien se actualiza el calculo
-      this.ejecutarCalculo();
+      if (this.estadoCalculo == true) {
+        // se actualiza el calculo
+        this.ejecutarCalculo();
+      }
     }
   }
 
@@ -199,9 +201,9 @@ export class ButtonComponentPorcentajeMedias {
 
       //aplicar los colores seleccionado a las columnas de las tablas
       this.tablaService.applyColorsToColumns(3);
-
-      this.estadoCalculo = true;
     }
+
+    this.estadoCalculo = true;
   }
 
   // metodo que filtra solo las comparaciones completas (cuando ambas columnas están seleccionadas) y las retorna

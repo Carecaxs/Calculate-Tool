@@ -1,5 +1,5 @@
 import { Component } from '@angular/core';
-import { TablaComponent } from '../../components/tables/tabla/tabla.component';
+import { TablaComponent } from '../../components/tables/tabla-principal/tabla.component';
 import { TablaResultadoPorcentajeMediasComponent } from '../../components/tables/tabla-resultado-porcentajes-medias/tabla-resultado-porcetajes-medias.component';
 import { ButtonComponentPorcentajeMedias } from '../../components/buttons/button-porcentajes-medias/button-porcentajes-medias.component';
 

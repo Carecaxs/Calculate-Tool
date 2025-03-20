@@ -8,7 +8,7 @@ import { BehaviorSubject } from 'rxjs';
 })
 export class TablaService {
   private table!: Tabulator; // Referencia a la tabla Tabulator
-  private tableComparacion!: Tabulator; // Referencia a la tabla comparacion porcentajes Tabulator
+  private tableResultPorcentajes!: Tabulator; // Referencia a la tabla comparacion porcentajes Tabulator
   private tableResultMedias!: Tabulator; // Referencia a la tabla resultados medias Tabulator
 
   private tablaListaSubject = new BehaviorSubject<boolean>(false); // Estado inicial: tabla no lista
@@ -37,7 +37,7 @@ export class TablaService {
 
   // Método para establecer la instancia de la tabla comparacion
   setTableComparacionInstance(table: Tabulator) {
-    this.tableComparacion = table;
+    this.tableResultPorcentajes = table;
   }
 
   // Método para establecer la instancia de la tabla comparacion
@@ -90,7 +90,7 @@ export class TablaService {
 
     if (indicador == 2) {
       //se realiza el mismo proceso pero para la tabla que refleja los resultados
-      this.tableComparacion.getRows().forEach((row) => {
+      this.tableResultPorcentajes.getRows().forEach((row) => {
         row.getCells().forEach((cell) => {
           const columnName = cell.getColumn().getField();
           const color = this.calculosService.getColorForComparation(columnName); // Usamos el método para obtener el color

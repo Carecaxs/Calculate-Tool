@@ -201,6 +201,7 @@ export class TablaResultadoPorcentajeMediasComponent implements AfterViewInit {
           this.table.setData(nuevaData);
         });
         this.tablaService.setTableResultMediaInstance(this.table);
+        this.tablaService.applyColorsToColumns(3);
       }
     });
   }

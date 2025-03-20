@@ -27,7 +27,7 @@ export class TablaResultadoNormaComponent {
   ngAfterViewInit(): void {
     Tabulator.registerModule([SpreadsheetModule]);
 
-    // 1- obtener columnas segun la seccion en normas que este (porcentajes o medias)
+    // obtener columnas segun la seccion en normas que este (porcentajes o medias)
     const columns = this.getColumnsForMode();
 
     //inicializar la tabla y configurarla
@@ -154,9 +154,6 @@ export class TablaResultadoNormaComponent {
   // Configura las suscripciones para que la tabla de resultados "escuche" cambios en columnas y data.
   setupSubscriptions(): void {
     this.table.on('tableBuilt', () => {
-      // Si el modo NO es "porcentajes-normas", usamos las columnas del observable,
-      // de lo contrario, se mantiene la definición manual.
-
       this.tablaService.columns$.subscribe((columnsFromOriginal) => {
         if (columnsFromOriginal && columnsFromOriginal.length > 0) {
           const updatedColumns = columnsFromOriginal.map((col) => ({
