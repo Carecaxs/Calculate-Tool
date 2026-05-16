@@ -48,8 +48,7 @@
                   "maximumError": "4kB"
                 }
               ],
-              "outputHashing": "all",
-              "baseHref": "/Calculate-Tool/"
+              "outputHashing": "all"
             },
             "development": {
               "optimization": false,
