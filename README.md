@@ -1,8 +1,8 @@
 # Calculate Tool
 
-Aplicación web desarrollada con Angular para realizar cálculos relacionados con medias, porcentajes y normas. El proyecto está organizado con una arquitectura basada en componentes reutilizables y servicios, usando el enfoque standalone de Angular.
+Web application developed with Angular for calculations related to averages, percentages, and standards. The project follows a component and service-based architecture using Angular standalone configuration.
 
-## Tecnologías utilizadas
+## Technologies Used
 
 - Angular 18
 - TypeScript
@@ -10,7 +10,7 @@ Aplicación web desarrollada con Angular para realizar cálculos relacionados co
 - CSS
 - Angular CLI
 
-## Estructura del proyecto
+## Project Structure
 
 ```bash
 src/
@@ -29,41 +29,41 @@ src/
     └── main.ts
 ```
 
-## Arquitectura
+## Architecture
 
-El proyecto utiliza una estructura separada por responsabilidades:
+The project uses a responsibility-based structure:
 
-- `pages/`: contiene las pantallas principales de la aplicación.
-- `components/`: contiene componentes reutilizables como botones, tablas y navegación.
-- `services/`: contiene la lógica de negocio y el procesamiento de datos.
-- `app.routes.ts`: define las rutas principales de la aplicación.
-- `app.config.ts`: contiene la configuración global del proyecto.
+- `pages/`: contains the main application views.
+- `components/`: reusable UI components such as buttons, tables, and navbar.
+- `services/`: handles business logic and data processing.
+- `app.routes.ts`: defines the application's routing system.
+- `app.config.ts`: contains the global application configuration.
 
-La aplicación no utiliza `AppModule`, ya que trabaja con el enfoque standalone de Angular.
+The application does not use `AppModule`, since it follows Angular's standalone architecture approach.
 
-## Instalación y ejecución
+## Installation and Setup
 
 ```bash
-git clone URL_DEL_REPOSITORIO
+git clone YOUR_REPOSITORY_URL
 cd Calculate-Tool
 npm install
 ng serve
 ```
 
-Luego abre el navegador en:
+Then open the browser at:
 
 ```bash
 http://localhost:4200/
 ```
 
-## Funcionalidades principales
+## Main Features
 
-- Cálculo de medias
-- Cálculo de porcentajes
-- Uso de tablas para mostrar resultados
-- Navegación entre secciones
-- Separación de lógica mediante servicios
+- Average calculations
+- Percentage calculations
+- Result tables
+- Navigation between sections
+- Separation of concerns using services
 
-## Autor
+## Author
 
-Desarrollado por Oscar Vásquez Rivas.
+Developed by Oscar Vásquez Rivas.
