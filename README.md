@@ -44,7 +44,7 @@ The application does not use `AppModule`, since it follows Angular's standalone 
 ## Installation and Setup
 
 ```bash
-git clone YOUR_REPOSITORY_URL
+git clone https://github.com/Carecaxs/Calculate-Tool.git
 cd Calculate-Tool
 npm install
 ng serve
